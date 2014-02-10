@@ -10,7 +10,7 @@ You must add your OAuth keys to ./keys/mykey.h.
 You can change the filename, if you do, change include filename.
 
 ```
-#include "_your-file_.h"
+#include "your-file.h"
 ```
 
 compile
