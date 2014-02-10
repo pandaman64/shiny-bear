@@ -7,7 +7,7 @@ add your keys
 ---
 
 You must add your OAuth keys to ./keys/mykey.h.
-You can change the filename, if you do, change include filename.
+You can change the filename. if you do, change include filename.
 
 ```
 #include "your-file.h"
