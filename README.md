@@ -6,9 +6,18 @@ twitter API library written in C.
 add your keys
 ---
 
-you must add your OAuth keys to ./keys/keys.h
+You must add your OAuth keys to ./keys/mykey.h.
+You can change the filename, if you do, change include filename.
+
+```
+#include "_your-file_.h"
+```
 
 compile
 ---
 
-use make.
+```sh
+$ make
+```
+
+That's all.
