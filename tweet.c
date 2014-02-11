@@ -23,8 +23,6 @@ static int http_request(char const *u, char const *p, char **reply)
 	struct URI uri = init_uri(u);
 	struct RESULT res = {NULL,NULL};
 	
-	printf("u = %s\nscheme = %s\nhost = %s\npath = %s\nport = %d",u,uri.scheme,uri.host,uri.path,uri.port);
-
 	send_req(&uri, p, &res);	
 	
 	if (strlen(res.headers) > 0) {

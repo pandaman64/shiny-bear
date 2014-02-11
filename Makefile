@@ -1,27 +1,24 @@
 
 TARGET=tweet
-
-CFLAGS= -ansi -std=c99 -c -W -Wall -Werror -DDEBUG -g
+CC=gcc
+CFLAGS= -ansi -std=c99 -c -W -Wall -Werror
 LDFLAGS= -lssl -loauth
-
-all: $(TARGET)
-
 OBJS = \
 	webclient.o \
 	tweet.o \
 	main.o
 
+
+all: $(TARGET)
+
 $(TARGET): $(OBJS)
-	gcc -o $(TARGET) $(OBJS) $(LDFLAGS)
+	$(CC) -o $(TARGET) $(OBJS) $(LDFLAGS)
+
 
 .c.o :
-	gcc $(CFLAGS) $<
+	gcc $(CFLAGS) -O2 $<
+
 clean:
 	-rm $(TARGET)
 	-rm *.o
-	
-webclient.o : webclient.c
-webclient.c : webclient.h
-tweet.o : tweet.c
-tweet.c : tweet.h
-main.o : main.c
+
