@@ -18,7 +18,7 @@ compile
 
 Before compilation, you need gcc, make, liboauth library, and some shell comannds.
 
-``esh
+```sh
 $ make
 ```
 
