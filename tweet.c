@@ -21,10 +21,11 @@ static int http_request(char const *u, char const *p, char **reply)
 		memset(*reply,0,strlen(*reply));
 	}
 	struct URI uri = init_uri(u);
-
 	struct RESULT res = {NULL,NULL};
+	
+	printf("u = %s\nscheme = %s\nhost = %s\npath = %s\nport = %d",u,uri.scheme,uri.host,uri.path,uri.port);
 
-	send_req(&uri, p, &res);
+	send_req(&uri, p, &res);	
 	
 	if (strlen(res.headers) > 0) {
 
@@ -62,6 +63,130 @@ char const * api_uri[] = {
 [UPDATE] = "statuses/update.json",
 };
 
+inline static char **add_que_or_amp(enum APIS api, char **uri) {
+	alloc_strcat(uri, strlen(*uri)==(strlen(api_uri_1_1) + strlen(api_uri[api]))?"?":"&");
+	return uri;
+}
+
+static char **add_count(enum APIS api, char **uri, int count) {
+	if (count) {
+		char cnt[8] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "count=");
+		snprintf(cnt, sizeof(cnt), "%d", count<201?count:200);
+		alloc_strcat(uri, cnt);
+	}
+	return uri;
+}
+
+static char **add_since_id(enum APIS api, char **uri, id_t since_id) {
+	if (since_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "since_id=");
+		snprintf(id, sizeof(id), "%llu", since_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_max_id(enum APIS api, char **uri, id_t max_id) {
+	if (max_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "max_id=");
+		snprintf(id, sizeof(id), "%llu", max_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_trim_user(enum APIS api, char **uri, int trim_user) {
+	if (trim_user != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "trim_user=");
+		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_contributor_details(enum APIS api, char **uri, int contributor_details) {
+	if (contributor_details != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "contributor_details=");
+		snprintf(boolian, sizeof(boolian), "%d", !!contributor_details);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_include_entities(enum APIS api, char **uri, int include_entities) {
+	if (include_entities != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "include_entities=");
+		snprintf(boolian, sizeof(boolian), "%d", !!include_entities);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_include_rts(enum APIS api, char **uri, int include_rts, int count) {
+	if (count || (include_rts != -1)) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "include_rts=");
+
+		snprintf(boolian, sizeof(boolian), "%d", count || (include_rts != -1));
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_user_id(enum APIS api, char **uri, id_t user_id) {
+	if (user_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "user_id=");
+		snprintf(id, sizeof(id), "%llu", user_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_screen_name(enum APIS api, char **uri, char *screen_name) {
+	if (screen_name && *screen_name) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "screen_name=");
+		alloc_strcat(uri, screen_name);
+	}
+	return uri;
+}
+
+static char **add_exclude_replies(enum APIS api, char **uri, int exclude_replies) {
+	if (exclude_replies != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "exclude_replies=");
+		snprintf(boolian, sizeof(boolian), "%d", !!exclude_replies);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_include_user_entities(enum APIS api, char **uri, int include_user_entities) {
+	if (include_user_entities != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "include_user_entities=");
+		snprintf(boolian, sizeof(boolian), "%d", !!include_user_entities);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
 
 int get_mentions_timeline (
 	char **res, //response
@@ -123,64 +248,17 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
+	enum APIS api = MENTIONS_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
-	alloc_strcat(&uri, api_uri[MENTIONS_TIMELINE]);
+	alloc_strcat(&uri, api_uri[api]);
 	
-	if (count) {
-		char cnt[8] = {0};
-		alloc_strcat(&uri, "?count=");
-		snprintf(cnt, sizeof(cnt), "%d", count<201?count:200);
-		alloc_strcat(&uri, cnt);
-	}
-	
-	if (since_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[MENTIONS_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "since_id=");
-		snprintf(id, sizeof(id), "%llu", since_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (max_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[MENTIONS_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "max_id=");
-		snprintf(id, sizeof(id), "%llu", max_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (trim_user != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[MENTIONS_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	
-	if (contributor_details != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[MENTIONS_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "contributor_details=");
-		snprintf(boolian, sizeof(boolian), "%d", !!contributor_details);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (include_entities != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[MENTIONS_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "include_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_entities);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (count || (include_rts != -1)) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[MENTIONS_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "include_rts=");
-		snprintf(boolian, sizeof(boolian), "%d", count || (include_rts != -1));
-		alloc_strcat(&uri, boolian);
-	}
+	add_count(api, &uri, count);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_trim_user(api, &uri, trim_user);
+	add_contributor_details(api, &uri, contributor_details);
+	add_include_entities(api, &uri, include_entities);
+	add_include_rts(api, &uri, include_rts, count);
 	
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
@@ -285,70 +363,19 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
+	enum APIS api = USER_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
-	alloc_strcat(&uri, api_uri[USER_TIMELINE]);
+	alloc_strcat(&uri, api_uri[api]);
 	
-	if (user_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, "?user_id=");
-		snprintf(id, sizeof(id), "%llu", user_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (screen_name && screen_name[0]) {
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[USER_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "screen_name=");
-		alloc_strcat(&uri, screen_name);
-	}
-	
-	if (count) {
-		char cnt[8] = {0};
-		alloc_strcat(&uri, "&count=");
-		snprintf(cnt, sizeof(cnt), "%d", count<201?count:200);
-		alloc_strcat(&uri, cnt);
-	}
-	
-	if (since_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, "&since_id=");
-		snprintf(id, sizeof(id), "%llu", since_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (max_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, "&max_id=");
-		snprintf(id, sizeof(id), "%llu", max_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (trim_user != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, "&trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (exclude_replies != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, "&exclude_replies=");
-		snprintf(boolian, sizeof(boolian), "%d", !!exclude_replies);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (contributor_details != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, "&contributor_details=");
-		snprintf(boolian, sizeof(boolian), "%d", !!contributor_details);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (count || (include_rts != -1)) {
-		char boolian[2];
-		alloc_strcat(&uri, "&include_rts=");
-		snprintf(boolian, sizeof(boolian), "%d", count || (include_rts != -1));
-		alloc_strcat(&uri, boolian);
-	}
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_count(api, &uri, count);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_trim_user(api, &uri, trim_user);
+	add_exclude_replies(api, &uri, exclude_replies);
+	add_contributor_details(api, &uri, contributor_details);
+	add_include_rts(api, &uri, include_rts, count);
 	
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
@@ -431,63 +458,17 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
+	enum APIS api = HOME_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
-	alloc_strcat(&uri, api_uri[HOME_TIMELINE]);
+	alloc_strcat(&uri, api_uri[api]);
 	
-	if (count) {
-		char cnt[8] = {0};
-		alloc_strcat(&uri, "?count=");
-		snprintf(cnt, sizeof(cnt), "%d", count<201?count:200);
-		alloc_strcat(&uri, cnt);
-	}
-	
-	if (since_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[HOME_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "since_id=");
-		snprintf(id, sizeof(id), "%llu", since_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (max_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[HOME_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "max_id=");
-		snprintf(id, sizeof(id), "%llu", max_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (trim_user != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[HOME_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (exclude_replies != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[HOME_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "exclude_replies=");
-		snprintf(boolian, sizeof(boolian), "%d", !!exclude_replies);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (contributor_details != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[HOME_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "contributor_details=");
-		snprintf(boolian, sizeof(boolian), "%d", !!contributor_details);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (include_entities != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[HOME_TIMELINE]))?"?":"&");
-		alloc_strcat(&uri, "include_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_entities);
-		alloc_strcat(&uri, boolian);
-	}
+	add_count(api, &uri, count);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_trim_user(api, &uri, trim_user);
+	add_exclude_replies(api, &uri, exclude_replies);
+	add_contributor_details(api, &uri, contributor_details);
+	add_include_entities(api, &uri, include_entities);
 	
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
@@ -565,56 +546,17 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
+	enum APIS api = RETWEETS_OF_ME;
 	alloc_strcat(&uri, api_uri_1_1); 
-	alloc_strcat(&uri, api_uri[RETWEETS_OF_ME]);
+	alloc_strcat(&uri, api_uri[api]);
 	
-	if (count) {
-		char cnt[8] = {0};
-		alloc_strcat(&uri, "?count=");
-		snprintf(cnt, sizeof(cnt), "%d", count<201?count:200);
-		alloc_strcat(&uri, cnt);
-	}
-	
-	if (since_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[RETWEETS_OF_ME]))?"?":"&");
-		alloc_strcat(&uri, "since_id=");
-		snprintf(id, sizeof(id), "%llu", since_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (max_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[RETWEETS_OF_ME]))?"?":"&");
-		alloc_strcat(&uri, "max_id=");
-		snprintf(id, sizeof(id), "%llu", max_id);
-		alloc_strcat(&uri, id);
-	}
-	
-	if (trim_user != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[RETWEETS_OF_ME]))?"?":"&");
-		alloc_strcat(&uri, "trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	
-	if (include_entities != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[RETWEETS_OF_ME]))?"?":"&");
-		alloc_strcat(&uri, "include_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_entities);
-		alloc_strcat(&uri, boolian);
-	}
-	
-	if (include_user_entities != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, strlen(uri)==(strlen(api_uri_1_1) + strlen(api_uri[RETWEETS_OF_ME]))?"?":"&");
-		alloc_strcat(&uri, "include_user_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_user_entities);
-		alloc_strcat(&uri, boolian);
-	}
+	add_count(api, &uri, count);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_trim_user(api, &uri, trim_user);
+	add_include_entities(api, &uri, include_entities);
+	add_include_user_entities(api, &uri, include_user_entities);
+
 	
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
@@ -721,8 +663,9 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
+	enum APIS api = UPDATE;
 	alloc_strcat(&uri, api_uri_1_1);
-	alloc_strcat(&uri, api_uri[UPDATE]);
+	alloc_strcat(&uri, api_uri[api]);
 	
 	char *escaped_msg = oauth_url_escape(status);
 	alloc_strcat(&uri, "?status=");
@@ -772,6 +715,7 @@ Example Values: true
 
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	printf("qwqwqwqw\nuri = %s\nrequest = %s\n",uri,request);
 	int ret = http_request(request, post, res);
 	
 	free(uri);uri = NULL;
