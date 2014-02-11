@@ -2,6 +2,7 @@ shiny-bear
 ==========
 
 twitter API library written in C.
+Based on [twiapps](http://www.soramimi.jp/twicpps/index.html).
 
 add your keys
 ---
