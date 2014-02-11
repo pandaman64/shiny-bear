@@ -60,6 +60,8 @@ char const * api_uri[] = {
 [USER_TIMELINE] = "statuses/user_timeline.json",
 [HOME_TIMELINE]  = "statuses/home_timeline.json",
 [RETWEETS_OF_ME] = "statuses/retweets_of_me.json",
+[RETWEETS_ID] = "statuses/retweets/",
+[SHOW] = "statuses/show.json",
 [UPDATE] = "statuses/update.json",
 };
 
@@ -75,6 +77,17 @@ static char **add_count(enum APIS api, char **uri, int count) {
 		alloc_strcat(uri, "count=");
 		snprintf(cnt, sizeof(cnt), "%d", count<201?count:200);
 		alloc_strcat(uri, cnt);
+	}
+	return uri;
+}
+
+static char **add_id(enum APIS api, char **uri, id_t id) {
+	if (id) {
+		char i[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "id=");
+		snprintf(i, sizeof(i), "%llu", id);
+		alloc_strcat(uri, i);
 	}
 	return uri;
 }
@@ -183,6 +196,77 @@ static char **add_include_user_entities(enum APIS api, char **uri, int include_u
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_user_entities=");
 		snprintf(boolian, sizeof(boolian), "%d", !!include_user_entities);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_include_my_retweet(enum APIS api, char **uri, int include_my_retweet) {
+	if (include_my_retweet != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "include_my_retweet=");
+		snprintf(boolian, sizeof(boolian), "%d", !!include_my_retweet);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_status(enum APIS api, char **uri, char *status) {
+	if (status && *status)	{
+	char *escaped_msg = oauth_url_escape(status);
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "status=");
+		alloc_strcat(uri, escaped_msg);
+		free(escaped_msg);escaped_msg = NULL;
+	}
+	return uri;
+}
+
+static char **add_in_reply_to_status_id(enum APIS api, char **uri, id_t in_reply_to_status_id) {
+	if (in_reply_to_status_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "in_reply_to_status_id=");
+		snprintf(id, sizeof(id), "%llu", in_reply_to_status_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_coods(enum APIS api, char **uri, union COOD l_l) {
+	if ((int)(fabs(l_l.l_l.latitude)) < 90 && (int)(fabs(l_l.l_l.longitude)) < 180) {
+		char latitude[32];
+		char longitude[32];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "latitude=");
+		snprintf(latitude, sizeof(latitude), "%2.12f", l_l.l_l.latitude);
+		alloc_strcat(uri, latitude);
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "longitude=");
+		snprintf(longitude, sizeof(longitude), "%2.12f", l_l.l_l.longitude);
+		alloc_strcat(uri, longitude);
+	}
+	return uri;
+}
+
+static char **add_place_id(enum APIS api, char **uri, id_t place_id) {
+	if (place_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "place_id=");
+		snprintf(id, sizeof(id), "%llx", place_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_display_coordinates(enum APIS api, char **uri, int display_coordinates) {
+	if (display_coordinates != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "display_coordinates=");
+		snprintf(boolian, sizeof(boolian), "%d", !!display_coordinates);
 		alloc_strcat(uri, boolian);
 	}
 	return uri;
@@ -358,7 +442,7 @@ Example Values: false
 	}
 	
 	if (!(user_id || (screen_name && screen_name[0]))) {
-		fprintf(stderr, "need user_id or screen_name\n");
+		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
 	
@@ -571,13 +655,157 @@ Example Values: false
 	return ret;
 }
 
+int get_retweets_id (
+	id_t id, //required
+	char **res, //response
+	int count, //optional. if not 0, add it to argument.
+	int trim_user //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/statuses/retweets/:id.json
+Parameters
+id required
+
+The numerical ID of the desired status.
+
+Example Values: 123
+
+count optional
+
+Specifies the number of records to retrieve. Must be less than or equal to 100.
+
+Example Values: 5
+
+trim_user optional
+
+When set to either true, t or 1, each tweet returned in a timeline will include a user object including only the status authors numerical ID. Omit this parameter to receive the complete user object.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!id) {
+		fprintf(stderr, "need id number\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = RETWEETS_ID;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	char i[32] = {0};
+	snprintf(i, sizeof(i), "%lld.json", id);
+	alloc_strcat(&uri, i);
+	
+	count%=101;
+	add_count(api, &uri, count);
+	add_trim_user(api, &uri, trim_user);
+
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_show (
+	id_t id, //required
+	char **res, //response
+	int trim_user, //optional. if not -1, add it to argument.
+	int include_my_retweet, //optional. if not -1, add it to argument.
+	int include_entities //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/statuses/show.json
+Parameters
+id required
+
+The numerical ID of the desired Tweet.
+
+Example Values: 123
+
+trim_user optional
+
+When set to either true, t or 1, each tweet returned in a timeline will include a user object including only the status authors numerical ID. Omit this parameter to receive the complete user object.
+
+Example Values: true
+
+include_my_retweet optional
+
+When set to either true, t or 1, any Tweets returned that have been retweeted by the authenticating user will include an additional current_user_retweet node, containing the ID of the source status for the retweet.
+
+Example Values: true
+
+include_entities optional
+
+The entities node will be disincluded when set to false.
+
+Example Values: false
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!id) {
+		fprintf(stderr, "need id number\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = SHOW;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_id(api, &uri, id);
+	add_trim_user(api, &uri, trim_user);
+	add_include_my_retweet(api, &uri, include_my_retweet);
+	add_include_entities(api, &uri, include_entities);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
 
 int post_update(
 	char *status, //required
 	char **res, // response
 	id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
 	int do_add_l_l, //add it. whether add l_l to argument.
-	union L_L l_l, //optional. if it is valid figure, add it to argument.
+	union COOD l_l, //optional. if it is valid figure, add it to argument.
 	id_t place_id, //optional. if not 0, add it to argument.
 	int display_coordinates, //optional. if not -1, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
@@ -667,55 +895,18 @@ Example Values: true
 	alloc_strcat(&uri, api_uri_1_1);
 	alloc_strcat(&uri, api_uri[api]);
 	
-	char *escaped_msg = oauth_url_escape(status);
-	alloc_strcat(&uri, "?status=");
-	alloc_strcat(&uri, escaped_msg);
-	free(escaped_msg);escaped_msg = NULL;
-	
-	if (in_reply_to_status_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, "&in_reply_to_status_id=");
-		snprintf(id, sizeof(id), "%llu", in_reply_to_status_id);
-		alloc_strcat(&uri, id);
+	add_status(api, &uri, status);
+	add_in_reply_to_status_id(api, &uri, in_reply_to_status_id);
+	if (do_add_l_l) {
+		add_coods(api, &uri, l_l);
 	}
-	
-	
-	if (do_add_l_l && (int)(fabs(l_l.l_l.latitude)) < 90 && (int)(fabs(l_l.l_l.longitude)) < 180) {
-		char latitude[32];
-		char longitude[32];
-		alloc_strcat(&uri, "&latitude=");
-		snprintf(latitude, sizeof(latitude), "%2.12f", l_l.l_l.latitude);
-		alloc_strcat(&uri, latitude);
-		alloc_strcat(&uri, "&longitude=");
-		snprintf(longitude, sizeof(longitude), "%2.12f", l_l.l_l.longitude);
-		alloc_strcat(&uri, longitude);
-	}
-
-	if (place_id) {
-		char id[32] = {0};
-		alloc_strcat(&uri, "&place_id=");
-		snprintf(id, sizeof(id), "%llx", place_id);
-		alloc_strcat(&uri, id);
-	}
-
-	if (display_coordinates != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, "&display_coordinates=");
-		snprintf(boolian, sizeof(boolian), "%d", !!display_coordinates);
-		alloc_strcat(&uri, boolian);
-	}
-
-	if (trim_user != -1) {
-		char boolian[2];
-		alloc_strcat(&uri, "&trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(&uri, boolian);
-	}
+	add_place_id(api, &uri, place_id);
+	add_display_coordinates(api, &uri, display_coordinates);
+	add_trim_user(api, &uri, trim_user);
 
 
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	printf("qwqwqwqw\nuri = %s\nrequest = %s\n",uri,request);
 	int ret = http_request(request, post, res);
 	
 	free(uri);uri = NULL;

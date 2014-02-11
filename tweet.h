@@ -9,6 +9,8 @@ enum APIS {
 	USER_TIMELINE,
 	HOME_TIMELINE,
 	RETWEETS_OF_ME,
+	RETWEETS_ID,
+	SHOW,
 	UPDATE,
 	NUM_OF_APIS
 };
@@ -29,7 +31,7 @@ int check_keys(void);
 #define LAT 0
 #define LONG 1
 
-union L_L {
+union COOD {
 	struct {
 		double latitude;
 		double longitude;
@@ -82,12 +84,27 @@ int get_retweets_of_me (
 	int include_user_entities //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	);
 
+int get_retweets_id (
+	id_t id, //required
+	char **res, //response
+	int count, //optional. if not 0, add it to argument.
+	int trim_user //optional. if not -1, add it to argument.
+	);
+
+int get_show (
+	id_t id, //required
+	char **res, //response
+	int trim_user, //optional. if not -1, add it to argument.
+	int include_my_retweet, //optional. if not -1, add it to argument.
+	int include_entities //optional. if not -1, add it to argument.
+	);
+
 int post_update(
 	char *update, //required
 	char **res, // response
 	id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
 	int do_add_l_l, //add it. whether add l_l to argument.
-	union L_L l_l, //optional. if it is valid figure, add it to argument.
+	union COOD l_l, //optional. if it is valid figure, add it to argument.
 	id_t place_id, //optional. if not 0, add it to argument.
 	int display_coordinates, //optional. if not -1, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
