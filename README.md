@@ -16,7 +16,9 @@ You can change the filename. if you do, change include filename.
 compile
 ---
 
-```sh
+Before compilation, you need gcc, make, liboauth library, and some shell comannds.
+
+``esh
 $ make
 ```
 
