@@ -60,6 +60,8 @@ char const * api_uri[] = {
 [RETWEETS_OF_ME] = "statuses/retweets_of_me.json",
 [RETWEETS_ID] = "statuses/retweets/",
 [SHOW] = "statuses/show.json",
+[DESTROY_ID] = "statuses/destroy/",
+[RETWEET_ID] = "statuses/retweet/",
 [UPDATE] = "statuses/update.json",
 };
 
@@ -797,6 +799,67 @@ Example Values: false
 	return ret;
 }
 
+int post_destroy_id (
+	id_t id, //required
+	char **res, //response
+	int trim_user //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/statuses/destroy/:id.json
+Parameters
+id required
+
+The numerical ID of the desired status.
+
+Example Values: 123
+
+trim_user optional
+
+When set to either true, t or 1, each tweet returned in a timeline will include a user object including only the status authors numerical ID. Omit this parameter to receive the complete user object.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!id) {
+		fprintf(stderr, "need id number\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = DESTROY_ID;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	char i[32] = {0};
+	snprintf(i, sizeof(i), "%lld.json", id);
+	alloc_strcat(&uri, i);
+	
+	add_trim_user(api, &uri, trim_user);
+
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
 
 int post_update(
 	char *status, //required
@@ -914,3 +977,63 @@ Example Values: true
 	return ret;
 }
 
+int post_retweet_id (
+	id_t id, //required
+	char **res, //response
+	int trim_user //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/statuses/retweet/:id.json
+Parameters
+id required
+
+The numerical ID of the desired status.
+
+Example Values: 123
+
+trim_user optional
+
+When set to either true, t or 1, each tweet returned in a timeline will include a user object including only the status authors numerical ID. Omit this parameter to receive the complete user object.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!id) {
+		fprintf(stderr, "need id number\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = RETWEET_ID;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	char i[32] = {0};
+	snprintf(i, sizeof(i), "%lld.json", id);
+	alloc_strcat(&uri, i);
+	
+	add_trim_user(api, &uri, trim_user);
+
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}

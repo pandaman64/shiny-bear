@@ -11,7 +11,9 @@ enum APIS {
 	RETWEETS_OF_ME,
 	RETWEETS_ID,
 	SHOW,
+	DESTROY_ID,
 	UPDATE,
+	RETWEET_ID,
 	NUM_OF_APIS
 };
 
@@ -98,7 +100,13 @@ int get_show (
 	int include_my_retweet, //optional. if not -1, add it to argument.
 	int include_entities //optional. if not -1, add it to argument.
 	);
-
+	
+int post_destroy_id (
+	id_t id, //required
+	char **res, //response
+	int trim_user //optional. if not -1, add it to argument.
+	);
+	
 int post_update(
 	char *update, //required
 	char **res, // response
@@ -109,4 +117,12 @@ int post_update(
 	int display_coordinates, //optional. if not -1, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
 	);
+
+int post_retweet_id (
+	id_t id, //required
+	char **res, //response
+	int trim_user //optional. if not -1, add it to argument.
+	);
+	
+//POST statuses/update_with_media is too difficult to implement
 #endif
