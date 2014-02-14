@@ -14,7 +14,15 @@ enum APIS {
 	DESTROY_ID,
 	UPDATE,
 	RETWEET_ID,
+	OEMBED,
 	NUM_OF_APIS
+};
+
+enum ALIGN {
+	NONE,
+	LEFT,
+	RIGHT,
+	CENTER,
 };
 
 union KEYS {

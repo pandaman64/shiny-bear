@@ -63,6 +63,7 @@ char const * api_uri[] = {
 [DESTROY_ID] = "statuses/destroy/",
 [RETWEET_ID] = "statuses/retweet/",
 [UPDATE] = "statuses/update.json",
+[OEMBED] = "statuses/oembed.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -268,6 +269,89 @@ static char **add_display_coordinates(enum APIS api, char **uri, int display_coo
 		alloc_strcat(uri, "display_coordinates=");
 		snprintf(boolian, sizeof(boolian), "%d", !!display_coordinates);
 		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_url(enum APIS api, char **uri, char *url){
+	if(url && *url) {
+		char *escaped_msg = oauth_url_escape(url);
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "url=");
+		alloc_strcat(uri, escaped_msg);
+		free(escaped_msg);escaped_msg = NULL;
+	}
+	return uri;
+}
+
+static char **add_maxwidth(enum APIS api, char **uri, int maxwidth) {
+	if (249 < maxwidth && maxwidth < 551) {
+		char cnt[8] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "maxwidth=");
+		snprintf(cnt, sizeof(cnt), "%d", maxwidth);
+		alloc_strcat(uri, cnt);
+	}
+	return uri;
+}
+
+static char **add_hide_media(enum APIS api, char **uri, int hide_media) {
+	if (hide_media != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "hide_media=");
+		snprintf(boolian, sizeof(boolian), "%d", !!hide_media);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_hide_thread(enum APIS api, char **uri, int hide_thread) {
+	if (hide_thread != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "hide_thread=");
+		snprintf(boolian, sizeof(boolian), "%d", !!hide_thread);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_omit_script(enum APIS api, char **uri, int omit_script) {
+	if (omit_script != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "omit_script=");
+		snprintf(boolian, sizeof(boolian), "%d", !!omit_script);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_align(enum APIS api, char **uri, enum ALIGN align) {
+	if (align < (CENTER + 1)) {
+		char const *algn[] = {"none", "left", "right", "center"};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "align=");
+		alloc_strcat(uri, algn[align]);
+	}
+	return uri;
+}
+
+static char **add_related(enum APIS api, char **uri, char *related) {
+	if (related && *related) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "related=");
+		alloc_strcat(uri, related);
+	}
+	return uri;
+}
+
+static char **add_lang(enum APIS api, char **uri, char *lang) {
+	if (lang && *lang) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "lang=");
+		alloc_strcat(uri, lang);
 	}
 	return uri;
 }
@@ -1028,6 +1112,135 @@ Example Values: true
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
 	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_oembed (
+	id_t id, //required. It is not necessary to include both.
+	char *url, //required. It is not necessary to include both.
+	char **res, //response
+	int maxwidth, //optional? It must be between 250 and 550.
+	int hide_media, //optional? If not -1, add it to argument.
+	int hide_thread, //optional? If not -1, add it to argument.
+	int omit_script, //optional? If not -1, add it to argument.
+	enum ALIGN align, //optional? If not NONE, add it to argument.
+	char *related, //optional? If it is valid, add it to argument.
+	char *lang //optional? If it is valid, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/statuses/oembed.json
+Parameters
+
+Either the id or url parameters must be specified in a request. It is not necessary to include both.
+id required
+
+The Tweet/status ID to return embed code for.
+
+Example Values: 99530515043983360
+
+url required
+
+The URL of the Tweet/status to be embedded.
+
+Example Values:
+
+To embed the Tweet at https://twitter.com/#!/twitter/status/99530515043983360, use:
+
+https%3A%2F%2Ftwitter.com%2F%23!%2Ftwitter%2Fstatus%2F99530515043983360
+
+To embed the Tweet at https://twitter.com/twitter/status/99530515043983360, use:
+
+https%3A%2F%2Ftwitter.com%2Ftwitter%2Fstatus%2F99530515043983360
+
+maxwidth
+
+The maximum width in pixels that the embed should be rendered at. This value is constrained to be between 250 and 550 pixels.
+
+Note that Twitter does not support the oEmbed maxheight parameter. Tweets are fundamentally text, and are therefore of unpredictable height that cannot be scaled like an image or video. Relatedly, the oEmbed response will not provide a value for height. Implementations that need consistent heights for Tweets should refer to the hide_thread and hide_media parameters below.
+
+Example Values: 325
+
+hide_media
+
+Specifies whether the embedded Tweet should automatically expand images which were uploaded via POST statuses/update_with_media. When set to either true, t or 1 images will not be expanded. Defaults to false.
+
+Example Values: true
+
+hide_thread
+
+Specifies whether the embedded Tweet should automatically show the original message in the case that the embedded Tweet is a reply. When set to either true, t or 1 the original Tweet will not be shown. Defaults to false.
+
+Example Values: true
+
+omit_script
+
+Specifies whether the embedded Tweet HTML should include a <script> element pointing to widgets.js. In cases where a page already includes widgets.js, setting this value to true will prevent a redundant script element from being included. When set to either true, t or 1 the <script> element will not be included in the embed HTML, meaning that pages must include a reference to widgets.js manually. Defaults to false.
+
+Example Values: true
+
+align
+
+Specifies whether the embedded Tweet should be left aligned, right aligned, or centered in the page. Valid values are left, right, center, and none. Defaults to none, meaning no alignment styles are specified for the Tweet.
+
+Example Values: center
+
+related
+
+A value for the TWT related parameter, as described in Web Intents. This value will be forwarded to all Web Intents calls.
+
+Example Values:
+
+twitterapi,twittermedia,twitter
+
+lang
+
+Language code for the rendered embed. This will affect the text and localization of the rendered HTML.
+
+Example Values: fr
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!id || !url || !(*url)) {
+		fprintf(stderr, "need id number or url text.\n");
+		return 0;
+	}
+	
+	
+	char *uri = NULL;
+	enum APIS api = OEMBED;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_id(api, &uri, id);
+	add_url(api, &uri, url);
+	add_maxwidth(api, &uri, maxwidth);
+	add_hide_media(api, &uri, hide_media);
+	add_hide_thread(api, &uri, hide_thread);
+	add_omit_script(api, &uri, omit_script);
+	add_align(api, &uri, align);
+	add_related(api, &uri, related);
+	add_lang(api, &uri, lang);
+
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
 
 
 	free(uri);uri = NULL;
