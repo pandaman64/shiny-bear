@@ -131,6 +131,19 @@ int post_retweet_id (
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
 	);
-	
+
 //POST statuses/update_with_media is too difficult to implement
+
+int get_oembed (
+	id_t id, //required. It is not necessary to include both.
+	char *url, //required. It is not necessary to include both.
+	char **res, //response
+	int maxwidth, //optional? It must be between 250 and 550.
+	int hide_media, //optional? If not -1, add it to argument.
+	int hide_thread, //optional? If not -1, add it to argument.
+	int omit_script, //optional? If not -1, add it to argument.
+	enum ALIGN align, //optional? If not NONE, add it to argument.
+	char *related, //optional? If it is valid, add it to argument.
+	char *lang //optional? If it is valid, add it to argument.
+	);
 #endif
