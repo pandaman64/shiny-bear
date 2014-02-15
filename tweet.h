@@ -15,6 +15,7 @@ enum APIS {
 	UPDATE,
 	RETWEET_ID,
 	OEMBED,
+	RETWEETERS_IDS,
 	NUM_OF_APIS
 };
 
@@ -145,5 +146,12 @@ int get_oembed (
 	enum ALIGN align, //optional? If not NONE, add it to argument.
 	char *related, //optional? If it is valid, add it to argument.
 	char *lang //optional? If it is valid, add it to argument.
+	);
+	
+int get_retweeters_ids (
+	id_t id, //required
+	char **res, //response
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids //optional. if not -1, add it to argument.
 	);
 #endif

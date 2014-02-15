@@ -64,6 +64,7 @@ char const * api_uri[] = {
 [RETWEET_ID] = "statuses/retweet/",
 [UPDATE] = "statuses/update.json",
 [OEMBED] = "statuses/oembed.json",
+[RETWEETERS_IDS] = "retweeters/ids.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -352,6 +353,28 @@ static char **add_lang(enum APIS api, char **uri, char *lang) {
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "lang=");
 		alloc_strcat(uri, lang);
+	}
+	return uri;
+}
+
+static char **add_cursor(enum APIS api, char **uri, int cursor) {
+	if (cursor) {
+		char cur[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "cursor=");
+		snprintf(cur, sizeof(cur), "%u", cursor);
+		alloc_strcat(uri, cur);
+	}
+	return uri;
+}
+
+static char **add_stringify_ids(enum APIS api, char **uri, int stringify_ids) {
+	if (stringify_ids != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "stringify_ids=");
+		snprintf(boolian, sizeof(boolian), "%d", !!stringify_ids);
+		alloc_strcat(uri, boolian);
 	}
 	return uri;
 }
@@ -1250,3 +1273,75 @@ Example Values: fr
 
 	return ret;
 }
+
+int get_retweeters_ids (
+	id_t id, //required
+	char **res, //response
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/statuses/retweeters/ids.json
+Parameters
+id required
+
+The numerical ID of the desired status.
+
+Example Values: 327473909412814850
+
+cursor semi-optional
+
+Causes the list of IDs to be broken into pages of no more than 100 IDs at a time. The number of IDs returned is not guaranteed to be 100 as suspended users are filtered out after connections are queried. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+While this method supports the cursor parameter, the entire result set can be returned in a single cursored collection. Using the count parameter with this method will not provide segmented cursors for use with this parameter.
+
+Example Values: 12893764510938
+
+stringify_ids optional
+
+Many programming environments will not consume our ids due to their size. Provide this option to have ids returned as strings instead. Read more about Twitter IDs, JSON and Snowflake.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!id) {
+		fprintf(stderr, "need id number\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = RETWEETERS_IDS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_id(api, &uri, id);
+	add_cursor(api, &uri, cursor);
+	add_stringify_ids(api, &uri, stringify_ids);
+
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
