@@ -236,17 +236,17 @@ static char **add_in_reply_to_status_id(enum APIS api, char **uri, id_t in_reply
 	return uri;
 }
 
-static char **add_coods(enum APIS api, char **uri, union COOD l_l) {
-	if ((int)(fabs(l_l.l_l.latitude)) < 90 && (int)(fabs(l_l.l_l.longitude)) < 180) {
+static char **add_coods(enum APIS api, char **uri, struct GEOCODE l_l) {
+	if ((int)(fabs(l_l.latitude)) < 90 && (int)(fabs(l_l.longitude)) < 180) {
 		char latitude[32];
 		char longitude[32];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "latitude=");
-		snprintf(latitude, sizeof(latitude), "%2.12f", l_l.l_l.latitude);
+		snprintf(latitude, sizeof(latitude), "%2.12f", l_l.latitude);
 		alloc_strcat(uri, latitude);
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "longitude=");
-		snprintf(longitude, sizeof(longitude), "%2.12f", l_l.l_l.longitude);
+		snprintf(longitude, sizeof(longitude), "%2.12f", l_l.longitude);
 		alloc_strcat(uri, longitude);
 	}
 	return uri;
@@ -973,7 +973,7 @@ int post_update(
 	char **res, // response
 	id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
 	int do_add_l_l, //add it. whether add l_l to argument.
-	union COOD l_l, //optional. if it is valid figure, add it to argument.
+	struct GEOCODE l_l, //optional. if it is valid figure, add it to argument.
 	id_t place_id, //optional. if not 0, add it to argument.
 	int display_coordinates, //optional. if not -1, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.

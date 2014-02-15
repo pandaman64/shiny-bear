@@ -42,14 +42,12 @@ int check_keys(void);
 #define LAT 0
 #define LONG 1
 
-union COOD {
-	struct {
+struct GEOCODE{
 		double latitude;
 		double longitude;
-	} l_l;
-	double cood[2];
+		int radius;
+		char *unit;
 };
-
 int get_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
