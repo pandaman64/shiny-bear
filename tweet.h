@@ -119,7 +119,7 @@ int post_update(
 	char **res, // response
 	id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
 	int do_add_l_l, //add it. whether add l_l to argument.
-	union COOD l_l, //optional. if it is valid figure, add it to argument.
+	struct GEOCODE l_l, //optional. if it is valid figure, add it to argument.
 	id_t place_id, //optional. if not 0, add it to argument.
 	int display_coordinates, //optional. if not -1, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
