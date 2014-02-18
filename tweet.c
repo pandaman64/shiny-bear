@@ -1,3 +1,4 @@
+// vim: set foldmethod=syntax :
 #include <errno.h>
 
 #include <stdio.h>
@@ -65,6 +66,7 @@ char const * api_uri[] = {
 [UPDATE] = "statuses/update.json",
 [OEMBED] = "statuses/oembed.json",
 [RETWEETERS_IDS] = "retweeters/ids.json",
+[TWEETS] = "search/tweets.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -375,6 +377,85 @@ static char **add_stringify_ids(enum APIS api, char **uri, int stringify_ids) {
 		alloc_strcat(uri, "stringify_ids=");
 		snprintf(boolian, sizeof(boolian), "%d", !!stringify_ids);
 		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_q(enum APIS api, char **uri, char *q){
+	if(q && *q) {
+		char *escaped_msg = oauth_url_escape(q);
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "q=");
+		alloc_strcat(uri, escaped_msg);
+		free(escaped_msg);escaped_msg = NULL;
+	}
+	return uri;
+}
+
+static char **add_geocode(enum APIS api, char **uri, struct GEOCODE geocode) {
+	if ((int)(fabs(geocode.latitude)) < 90 && (int)(fabs(geocode.longitude)) < 180 && geocode.radius != 0 && geocode.unit && *geocode.unit) {
+		char latitude[32];
+		char longitude[32];
+		char rad[8];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "geocode=");
+		snprintf(latitude, sizeof(latitude), "%2.12f,", geocode.latitude);
+		alloc_strcat(uri, latitude);
+		snprintf(longitude, sizeof(longitude), "%2.12f,", geocode.longitude);
+		alloc_strcat(uri, longitude);
+		snprintf(rad, sizeof(rad), "%d", geocode.radius);
+		alloc_strcat(uri, rad);
+		alloc_strcat(uri, geocode.unit);
+	}
+	return uri;
+}
+
+static char **add_locale(enum APIS api, char **uri, char *locale) {
+	if (locale && *locale) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "locale=");
+		alloc_strcat(uri, locale);
+	}
+	return uri;
+}
+
+static char **add_result_type(enum APIS api, char **uri, int result_type) {
+	if (result_type) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "result_type=");
+		if (result_type & MIXED) {
+			alloc_strcat(uri, "mixed");
+		}
+		if (result_type & RECENT) {
+			if (result_type & MIXED) {
+				alloc_strcat(uri, ",");
+			}
+			alloc_strcat(uri, "recent");
+		}
+		if (result_type & POPULAR) {
+			if (result_type & (MIXED | RECENT)) {
+				alloc_strcat(uri, ",");
+			}
+			alloc_strcat(uri, "popular");
+		}
+	}
+	return uri;
+}
+
+static char **add_until(enum APIS api, char **uri, char *until) {
+	if (until && *until) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "until=");
+		alloc_strcat(uri, until);
+	}
+	return uri;
+}
+
+static char **add_callback(enum APIS api, char **uri, char *callback) {
+	if (callback && *callback) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "callback=");
+		alloc_strcat(uri, callback);
 	}
 	return uri;
 }
@@ -1345,3 +1426,141 @@ Example Values: true
 	return ret;
 }
 
+int get_tweets (
+	char *q, //required
+	char **res, //response
+	struct GEOCODE geocode, //optional. If it is valid, add it to argument.
+	char *lang, //optional. If not 0, add it to argument.
+	char *locale, //optional. If not 0, add it to argument. Only ja is currently effective
+	int result_type, //optional. If not 0, add it to argument. 1 = "mixed",2="recent",4="popular"
+	int count, //optional. If not 0, add it to argument.
+	char *until, //optional. If not 0, add it to argument.
+	id_t since_id, //optional. If not 0, add it to argument.
+	id_t max_id, //optional. If not 0, add it to argument.
+	int include_entities, //optional. If not -1, add it to argument.
+	char *callback //optional. If not 0, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/search/tweets.json
+Parameters
+q required
+
+A UTF-8, URL-encoded search query of 1,000 characters maximum, including operators. Queries may additionally be limited by complexity.
+
+Example Values: @noradio
+
+geocode optional
+
+Returns tweets by users located within a given radius of the given latitude/longitude. The location is preferentially taking from the Geotagging API, but will fall back to their Twitter profile. The parameter value is specified by "latitude,longitude,radius", where radius units must be specified as either "mi" (miles) or "km" (kilometers). Note that you cannot use the near operator via the API to geocode arbitrary locations; however you can use this geocode parameter to search near geocodes directly. A maximum of 1,000 distinct "sub-regions" will be considered when using the radius modifier.
+
+Example Values: 37.781157,-122.398720,1mi
+
+lang optional
+
+Restricts tweets to the given language, given by an ISO 639-1 code. Language detection is best-effort.
+
+Example Values: eu
+
+locale optional
+
+Specify the language of the query you are sending (only ja is currently effective). This is intended for language-specific consumers and the default should work in the majority of cases.
+
+Example Values: ja
+
+result_type optional
+
+Optional. Specifies what type of search results you would prefer to receive. The current default is "mixed." Valid values include:
+  * mixed: Include both popular and real time results in the response.
+  * recent: return only the most recent results in the response
+  * popular: return only the most popular results in the response.
+
+Example Values: mixed, recent, popular
+
+count optional
+
+The number of tweets to return per page, up to a maximum of 100. Defaults to 15. This was formerly the "rpp" parameter in the old Search API.
+
+Example Values: 100
+
+until optional
+
+Returns tweets generated before the given date. Date should be formatted as YYYY-MM-DD. Keep in mind that the search index may not go back as far as the date you specify here.
+
+Example Values: 2012-09-01
+
+since_id optional
+
+Returns results with an ID greater than (that is, more recent than) the specified ID. There are limits to the number of Tweets which can be accessed through the API. If the limit of Tweets has occured since the since_id, the since_id will be forced to the oldest ID available.
+
+Example Values: 12345
+
+max_id optional
+
+Returns results with an ID less than (that is, older than) or equal to the specified ID.
+
+Example Values: 54321
+
+include_entities optional
+
+The entities node will be disincluded when set to false.
+
+Example Values: false
+
+callback optional
+
+If supplied, the response will use the JSONP format with a callback of the given name. The usefulness of this parameter is somewhat diminished by the requirement of authentication for requests to this endpoint.
+
+Example Values: processTweets
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!q || !(*q)) {
+		fprintf(stderr, "need q text\n");
+		return 0;
+	}
+	
+	if (strlen(q) > 1000) {
+		fprintf(stderr, "too long q text\n");
+		return 0;
+	}
+	char *uri = NULL;
+	enum APIS api = TWEETS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_q(api, &uri, q);
+	add_geocode(api, &uri, geocode);
+	add_lang(api, &uri, lang);
+	add_locale(api, &uri, locale);
+	add_result_type(api, &uri, result_type);
+	add_count(api, &uri, count);
+	add_until(api, &uri, until);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_include_entities(api, &uri, include_entities);
+	add_callback(api, &uri, callback);
+
+
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}

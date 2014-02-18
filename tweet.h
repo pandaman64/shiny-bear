@@ -16,6 +16,7 @@ enum APIS {
 	RETWEET_ID,
 	OEMBED,
 	RETWEETERS_IDS,
+	TWEETS,
 	NUM_OF_APIS
 };
 
@@ -39,15 +40,21 @@ union KEYS {
 union KEYS init_keys (union KEYS k);
 int check_keys(void);
 
-#define LAT 0
-#define LONG 1
-
 struct GEOCODE{
 		double latitude;
 		double longitude;
 		int radius;
 		char *unit;
 };
+
+char const *MI = "mi";
+char const *KM = "km";
+char const *JA = "ja";
+
+int const MIXED = 1;
+int const RECENT = 2;
+int const POPULAR = 4;
+
 int get_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
