@@ -8,38 +8,67 @@
 #include <math.h>
 
 #include <oauth.h>
-#include "webclient.h"
 #include "tweet.h"
 
-
-static int http_request(char const *u, char const *p, char **reply)
-{
+static char **alloc_strcat(char **dest, char const *src) {
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
 
-	if (*reply) {
-		memset(*reply,0,strlen(*reply));
+	int destlen = 0, srclen = 0,wasdestnull = 0;
+	destlen = (*dest)?strlen(*dest):0;
+	srclen = strlen(src);
+	wasdestnull = !(*dest);
+	*dest = (char*)realloc(*dest, (destlen + srclen + 1)*sizeof(char));
+	if (dest) {
+		if (wasdestnull) {
+			memset(*dest, 0, strlen(src) + 1);
+		}
+		strncat(*dest, src, strlen(src));
+	} else {
+		fprintf(stderr,"realloc failed\n");
 	}
-	struct URI uri = init_uri(u);
-	struct RESULT res = {NULL,NULL};
-	
-	send_req(&uri, p, &res);	
-	
-	if (strlen(res.headers) > 0) {
+	return dest;
+}
 
-		int a, b, c;
-		sscanf(res.headers, "HTTP/%d.%d %d", &a, &b, &c);
-		free(res.headers);
-		res.headers = NULL;
-		if (reply && res.content && res.content[0]) {
-			*reply = res.content;
-		}
-		if (c == 200) {
-			return 1;
-		}
+static size_t write_data(char *buffer, size_t size, size_t nmemb, void *rep) {
+	*(buffer + size * nmemb) = '\0';
+	alloc_strcat((char**)rep, buffer);
+
+	return size * nmemb;
+}
+
+static int http_request(char const *u, char const *p, char **rep) {
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (*rep) {
+		memset(*rep,0,strlen(*rep));
 	}
-	return 0;
+	CURL *curl;
+	CURLcode ret;
+	curl = curl_easy_init();
+	if (!curl) {
+		fprintf(stderr, "failed to initialize curl\n");
+	}
+	curl_easy_setopt (curl, CURLOPT_URL, request);
+	if (p && *p) {
+		curl_easy_setopt (curl, CURLOPT_POSTFIELDS, (void *) p);
+	}
+	//is it good? i dont know.
+	curl_easy_setopt (curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, (void *) res);
+	curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, write_data);
+
+	ret = curl_easy_perform (curl);
+	if (ret != CURLE_OK) {
+		fprintf (stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror (ret));
+	}
+
+	curl_easy_cleanup(curl);
+	
+	return ret;
 }
 
 static union KEYS keys = {.keys_array = {NULL,NULL,NULL,NULL}}; 

@@ -4,7 +4,6 @@ CC=gcc
 CFLAGS= -ansi -std=c99 -c -W -Wall -Werror
 LDFLAGS= -lssl -loauth
 OBJS = \
-	webclient.o \
 	tweet.o \
 	main.o
 
