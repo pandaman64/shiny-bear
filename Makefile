@@ -2,7 +2,7 @@
 TARGET=tweet
 CC=gcc
 CFLAGS= -ansi -std=c99 -c -W -Wall -Werror
-LDFLAGS= -lssl -loauth
+LDFLAGS= -lcurl -loauth
 OBJS = \
 	tweet.o \
 	main.o

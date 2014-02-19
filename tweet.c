@@ -8,6 +8,7 @@
 #include <math.h>
 
 #include <oauth.h>
+#include <curl/curl.h>
 #include "tweet.h"
 
 static char **alloc_strcat(char **dest, char const *src) {
@@ -52,13 +53,13 @@ static int http_request(char const *u, char const *p, char **rep) {
 	if (!curl) {
 		fprintf(stderr, "failed to initialize curl\n");
 	}
-	curl_easy_setopt (curl, CURLOPT_URL, request);
+	curl_easy_setopt (curl, CURLOPT_URL, u);
 	if (p && *p) {
 		curl_easy_setopt (curl, CURLOPT_POSTFIELDS, (void *) p);
 	}
 	//is it good? i dont know.
 	curl_easy_setopt (curl, CURLOPT_SSL_VERIFYPEER, 0L);
-	curl_easy_setopt (curl, CURLOPT_WRITEDATA, (void *) res);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, (void *) rep);
 	curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, write_data);
 
 	ret = curl_easy_perform (curl);
