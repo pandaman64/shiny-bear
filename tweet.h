@@ -47,13 +47,13 @@ struct GEOCODE{
 		char *unit;
 };
 
-char const *MI = "mi";
-char const *KM = "km";
-char const *JA = "ja";
+#define MI "mi"
+#define KM "km"
+#define JA "ja"
 
-int const MIXED = 1;
-int const RECENT = 2;
-int const POPULAR = 4;
+#define MIXED 1
+#define RECENT 2
+#define POPULAR 4
 
 int get_mentions_timeline (
 	char **res, //response
@@ -107,7 +107,7 @@ int get_retweets_id (
 	int trim_user //optional. if not -1, add it to argument.
 	);
 
-int get_show (
+int get_show_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
