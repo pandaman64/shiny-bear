@@ -943,7 +943,7 @@ Example Values: true
 	return ret;
 }
 
-int get_show (
+int get_show_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
