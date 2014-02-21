@@ -17,7 +17,7 @@ You can change the filename. if you do, change include filename.
 compile
 ---
 
-Before compilation, you need gcc, make, liboauth libssl.
+Before compilation, you need gcc, make, liboauth, libssl.
 
 ```sh
 $ make
