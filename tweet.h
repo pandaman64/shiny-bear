@@ -9,11 +9,11 @@ enum APIS {
 	USER_TIMELINE,
 	HOME_TIMELINE,
 	RETWEETS_OF_ME,
-	RETWEETS_ID,
-	SHOW,
-	DESTROY_ID,
+	RETWEETS_BY_ID,
+	SHOW_BY_ID,
+	DESTROY_BY_ID,
 	UPDATE,
-	RETWEET_ID,
+	RETWEET_BY_ID,
 	OEMBED,
 	RETWEETERS_IDS,
 	TWEETS,
@@ -100,14 +100,14 @@ int get_retweets_of_me (
 	int include_user_entities //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	);
 
-int get_retweets_id (
+int get_retweets_by_id (
 	id_t id, //required
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
 	);
 
-int get_show_id (
+int get_show_by_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
@@ -115,7 +115,7 @@ int get_show_id (
 	int include_entities //optional. if not -1, add it to argument.
 	);
 	
-int post_destroy_id (
+int post_destroy_by_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
@@ -132,7 +132,7 @@ int post_update(
 	int trim_user //optional. if not -1, add it to argument.
 	);
 
-int post_retweet_id (
+int post_retweet_by_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.

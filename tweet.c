@@ -59,10 +59,10 @@ char const * api_uri[] = {
 [USER_TIMELINE] = "statuses/user_timeline.json",
 [HOME_TIMELINE]  = "statuses/home_timeline.json",
 [RETWEETS_OF_ME] = "statuses/retweets_of_me.json",
-[RETWEETS_ID] = "statuses/retweets/",
-[SHOW] = "statuses/show.json",
-[DESTROY_ID] = "statuses/destroy/",
-[RETWEET_ID] = "statuses/retweet/",
+[RETWEETS_BY_ID] = "statuses/retweets/",
+[SHOW_BY_ID] = "statuses/show.json",
+[DESTROY_BY_ID] = "statuses/destroy/",
+[RETWEET_BY_ID] = "statuses/retweet/",
 [UPDATE] = "statuses/update.json",
 [OEMBED] = "statuses/oembed.json",
 [RETWEETERS_IDS] = "retweeters/ids.json",
@@ -843,7 +843,7 @@ Example Values: false
 	return ret;
 }
 
-int get_retweets_id (
+int get_retweets_by_id (
 	id_t id, //required
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
@@ -888,7 +888,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = RETWEETS_ID;
+	enum APIS api = RETWEETS_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	char i[32] = {0};
@@ -913,7 +913,7 @@ Example Values: true
 	return ret;
 }
 
-int get_show_id (
+int get_show_by_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
@@ -965,7 +965,7 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
-	enum APIS api = SHOW;
+	enum APIS api = SHOW_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 
@@ -987,7 +987,7 @@ Example Values: false
 	return ret;
 }
 
-int post_destroy_id (
+int post_destroy_by_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
@@ -1025,7 +1025,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = DESTROY_ID;
+	enum APIS api = DESTROY_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	char i[32] = {0};
@@ -1165,7 +1165,7 @@ Example Values: true
 	return ret;
 }
 
-int post_retweet_id (
+int post_retweet_by_id (
 	id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
@@ -1203,7 +1203,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = RETWEET_ID;
+	enum APIS api = RETWEET_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	char i[32] = {0};
