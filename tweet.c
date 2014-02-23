@@ -99,6 +99,8 @@ char const * api_uri[] = {
 [TWEETS] = "search/tweets.json",
 [DIRECT_MESSAGES] = "direct_messages.json",
 [DM_SENT] = "direct_messages/sent.json",
+[DM_SHOW] = "direct_messages/show.json",
+[DM_DESTROY] = "direct_messages/destroy.json ",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -513,6 +515,18 @@ static char **add_pages(enum APIS api, char **uri, int pages) {
 	}
 	return uri;
 }
+
+static char **add_text(enum APIS api, char **uri, char *text) {
+	if (text && *text)	{
+	char *escaped_msg = oauth_url_escape(text);
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "text=");
+		alloc_strcat(uri, escaped_msg);
+		free(escaped_msg);escaped_msg = NULL;
+	}
+	return uri;
+}
+
 int get_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
@@ -1759,6 +1773,169 @@ Example Values: false
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_dm_show (
+	id_t id, //required
+	char **res //response
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/direct_messages/show.json
+Parameters
+id required
+
+The ID of the direct message.
+
+Example Values: 587424932
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = DM_SHOW;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_id(api, &uri, id);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int post_dm_destroy (
+	id_t id, //required
+	char **res, //response
+	int include_entities //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/direct_messages/destroy.json
+Parameters
+id required
+
+The ID of the direct message to delete.
+
+Example Values: 1270516771
+
+include_entities optional
+
+The entities node will not be included when set to false.
+
+Example Values: false
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = DM_DESTROY;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_id(api, &uri, id);
+	add_include_entities(api, &uri, include_entities);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int post_dm_new (
+	id_t user_id, //One of user_id or screen_name are required.
+	char *screen_name, //One of user_id or screen_name are required.
+	char *text, //required.
+	char **res //response
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/direct_messages/new.json
+Parameters
+
+One of user_id or screen_name are required.
+
+user_id optional
+
+The ID of the user who should receive the direct message. Helpful for disambiguating when a valid user ID is also a valid screen name.
+
+Example Values: 12345
+
+screen_name optional
+
+The screen name of the user who should receive the direct message. Helpful for disambiguating when a valid screen name is also a user ID.
+
+Example Values: noradio
+text required
+
+The text of your direct message. Be sure to URL encode as necessary, and keep the message under 140 characters.
+
+Example Values: Meet me behind the cafeteria after school
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = DM_NEW;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_text(api, &uri, text);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
 
 
 	free(uri);uri = NULL;
