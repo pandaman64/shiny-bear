@@ -53,3 +53,4 @@ Currently this library has wrappers for following twitter REST APIs:
 
 **Direct Messages**
 - [direct_messages](https://dev.twitter.com/docs/api/1.1/get/direct_messages)
+- [direct_messages/sent](https://dev.twitter.com/docs/api/1.1/get/direct_messages/sent)
