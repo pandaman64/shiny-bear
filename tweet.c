@@ -101,6 +101,7 @@ char const * api_uri[] = {
 [DM_SENT] = "direct_messages/sent.json",
 [DM_SHOW] = "direct_messages/show.json",
 [DM_DESTROY] = "direct_messages/destroy.json ",
+[DM_NEW] = "direct_messages/new.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {

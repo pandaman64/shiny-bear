@@ -179,4 +179,40 @@ int get_tweets (
 	int include_entities, //optional. If not -1, add it to argument.
 	char *callback //optional. If not 0, add it to argument.
 	);
+
+int get_direct_messages (
+	char **res, //response
+	int count, //optional. if not 0, add it to argument.
+	id_t since_id, //optional. if not 0, add it to argument.
+	id_t max_id, //optional. if not 0, add it to argument.
+	int include_entities, //optional. if not -1, add it to argument.
+	int skip_status //optional. if not -1, add it to argument,however, 1 is recommended.see below.
+	);
+
+int get_dm_sent (
+	char **res, //response
+	int count, //optional. if not 0, add it to argument.
+	id_t since_id, //optional. if not 0, add it to argument.
+	id_t max_id, //optional. if not 0, add it to argument.
+	int pages, //optional. if not -1, add it to argument,however, 1 is recommended.see below.
+	int include_entities //optional. if not -1, add it to argument.
+	);
+
+int get_dm_show (
+	id_t id, //required
+	char **res //response
+	);
+
+int post_dm_destroy (
+	id_t id, //required
+	char **res, //response
+	int include_entities //optional. if not -1, add it to argument.
+	);
+
+int post_dm_new (
+	id_t user_id, //One of user_id or screen_name are required.
+	char *screen_name, //One of user_id or screen_name are required.
+	char *text, //required.
+	char **res //response
+	);
 #endif
