@@ -48,3 +48,8 @@ Currently this library has wrappers for following twitter REST APIs:
 
 **Search**
 - [search/tweets](https://dev.twitter.com/docs/api/1.1/get/search/tweets)
+
+**Streaming**
+
+**Direct Messages**
+- [direct_messages](https://dev.twitter.com/docs/api/1.1/get/direct_messages)
