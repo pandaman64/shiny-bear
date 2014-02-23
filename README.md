@@ -55,5 +55,5 @@ Currently this library has wrappers for following twitter REST APIs:
 - [direct_messages](https://dev.twitter.com/docs/api/1.1/get/direct_messages)
 - [direct_messages/sent](https://dev.twitter.com/docs/api/1.1/get/direct_messages/sent)
 - [direct_messages/show](https://dev.twitter.com/docs/api/1.1/get/direct_messages/show)
-- [direct_messages/destory](https://dev.twitter.com/docs/api/1.1/post/direct_messages/destory)
+- [direct_messages/destroy](https://dev.twitter.com/docs/api/1.1/post/direct_messages/destroy)
 - [direct_messages/new](https://dev.twitter.com/docs/api/1.1/post/direct_messages/new)
