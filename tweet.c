@@ -98,6 +98,7 @@ char const * api_uri[] = {
 [RETWEETERS_IDS] = "retweeters/ids.json",
 [TWEETS] = "search/tweets.json",
 [DIRECT_MESSAGES] = "direct_messages.json",
+[DM_SENT] = "direct_messages/sent.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -502,6 +503,16 @@ static char **add_skip_status(enum APIS api, char **uri, int skip_status) {
 	return uri;
 }
 
+static char **add_pages(enum APIS api, char **uri, int pages) {
+	if (pages) {
+		char pg[8] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "pages=");
+		snprintf(pg, sizeof(pg), "%d", pages);
+		alloc_strcat(uri, pg);
+	}
+	return uri;
+}
 int get_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
@@ -1668,6 +1679,82 @@ When set to either true, t or 1 statuses will not be included in the returned us
 	add_max_id(api, &uri, max_id);
 	add_include_entities(api, &uri, include_entities);
 	add_skip_status(api, &uri, skip_status);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_dm_sent (
+	char **res, //response
+	int count, //optional. if not 0, add it to argument.
+	id_t since_id, //optional. if not 0, add it to argument.
+	id_t max_id, //optional. if not 0, add it to argument.
+	int pages, //optional. if not -1, add it to argument,however, 1 is recommended.see below.
+	int include_entities //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/direct_messages/sent.json
+Parameters
+since_id optional
+
+Returns results with an ID greater than (that is, more recent than) the specified ID. There are limits to the number of Tweets which can be accessed through the API. If the limit of Tweets has occured since the since_id, the since_id will be forced to the oldest ID available.
+
+Example Values: 12345
+
+max_id optional
+
+Returns results with an ID less than (that is, older than) or equal to the specified ID.
+
+Example Values: 54321
+
+count optional
+
+Specifies the number of records to retrieve. Must be less than or equal to 200.
+
+Example Values: 5
+
+page optional
+
+Specifies the page of results to retrieve.
+
+Example Values: 3
+
+include_entities optional
+
+The entities node will not be included when set to false.
+
+Example Values: false
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = DM_SENT;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_count(api, &uri, count);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_pages(api, &uri,pages);
+	add_include_entities(api, &uri, include_entities);
 	
 	char *post = NULL;
 	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
