@@ -159,4 +159,19 @@ int get_retweeters_ids (
 	int cursor, //optional. if not 0, add it to argument.
 	int stringify_ids //optional. if not -1, add it to argument.
 	);
+
+int get_tweets (
+	char *q, //required
+	char **res, //response
+	struct GEOCODE geocode, //optional. If it is valid, add it to argument.
+	char *lang, //optional. If not 0, add it to argument.
+	char *locale, //optional. If not 0, add it to argument. Only ja is currently effective
+	int result_type, //optional. If not 0, add it to argument. 1 = "mixed",2="recent",4="popular"
+	int count, //optional. If not 0, add it to argument.
+	char *until, //optional. If not 0, add it to argument.
+	id_t since_id, //optional. If not 0, add it to argument.
+	id_t max_id, //optional. If not 0, add it to argument.
+	int include_entities, //optional. If not -1, add it to argument.
+	char *callback //optional. If not 0, add it to argument.
+	);
 #endif

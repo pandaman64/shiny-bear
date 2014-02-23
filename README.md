@@ -1,7 +1,7 @@
 shiny-bear
 ==========
 
-twitter API library written in C.
+multi-platform twitter API library written in C.
 Based on [twiapps](http://www.soramimi.jp/twicpps/index.html).
 
 add your keys
@@ -17,7 +17,7 @@ You can change the filename. if you do, change include filename.
 compile
 ---
 
-Before compilation, you need gcc, make, liboauth, libssl.
+Before compilation, you need gcc, make, liboauth and libcurl.
 
 ```sh
 $ make
@@ -48,4 +48,3 @@ Currently this library has wrappers for following twitter REST APIs:
 
 **Search**
 - [search/tweets](https://dev.twitter.com/docs/api/1.1/get/search/tweets)
-
