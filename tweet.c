@@ -97,6 +97,7 @@ char const * api_uri[] = {
 [OEMBED] = "statuses/oembed.json",
 [RETWEETERS_IDS] = "retweeters/ids.json",
 [TWEETS] = "search/tweets.json",
+[DIRECT_MESSAGES] = "direct_messages.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -486,6 +487,17 @@ static char **add_callback(enum APIS api, char **uri, char *callback) {
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "callback=");
 		alloc_strcat(uri, callback);
+	}
+	return uri;
+}
+
+static char **add_skip_status(enum APIS api, char **uri, int skip_status) {
+	if (skip_status != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "skip_status=");
+		snprintf(boolian, sizeof(boolian), "%d", !!skip_status);
+		alloc_strcat(uri, boolian);
 	}
 	return uri;
 }
@@ -1594,3 +1606,79 @@ Example Values: processTweets
 
 	return ret;
 }
+
+int get_direct_messages (
+	char **res, //response
+	int count, //optional. if not 0, add it to argument.
+	id_t since_id, //optional. if not 0, add it to argument.
+	id_t max_id, //optional. if not 0, add it to argument.
+	int include_entities, //optional. if not -1, add it to argument.
+	int skip_status //optional. if not -1, add it to argument,however, 1 is recommended.see below.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/direct_messages.json
+Parameters
+since_id optional
+
+Returns results with an ID greater than (that is, more recent than) the specified ID. There are limits to the number of Tweets which can be accessed through the API. If the limit of Tweets has occured since the since_id, the since_id will be forced to the oldest ID available.
+
+Example Values: 12345
+
+max_id optional
+
+Returns results with an ID less than (that is, older than) or equal to the specified ID.
+
+Example Values: 54321
+
+count optional
+
+Specifies the number of direct messages to try and retrieve, up to a maximum of 200. The value of count is best thought of as a limit to the number of Tweets to return because suspended or deleted content is removed after the count has been applied.
+
+Example Values: 5
+
+include_entities optional
+
+The entities node will not be included when set to false.
+
+Example Values: false
+
+skip_status optional
+
+When set to either true, t or 1 statuses will not be included in the returned user objects.
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = DIRECT_MESSAGES;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_count(api, &uri, count);
+	add_since_id(api, &uri, since_id);
+	add_max_id(api, &uri, max_id);
+	add_include_entities(api, &uri, include_entities);
+	add_skip_status(api, &uri, skip_status);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
