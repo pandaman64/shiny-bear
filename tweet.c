@@ -11,12 +11,6 @@
 #include <curl/curl.h>
 #include "tweet.h"
 
-#ifdef __CYGWIN__
-	#ifdef __id_t_defined
-		#define id_t tweet_id_t
-	#endif
-#endif
-
 static char **alloc_strcat(char **dest, char const *src) {
 	#ifdef DEBUG
 	puts(__func__);
@@ -126,7 +120,7 @@ static char **add_count(enum APIS api, char **uri, int count) {
 	return uri;
 }
 
-static char **add_id(enum APIS api, char **uri, id_t id) {
+static char **add_id(enum APIS api, char **uri, tweet_id_t id) {
 	if (id) {
 		char i[32] = {0};
 		add_que_or_amp(api, uri);
@@ -137,7 +131,7 @@ static char **add_id(enum APIS api, char **uri, id_t id) {
 	return uri;
 }
 
-static char **add_since_id(enum APIS api, char **uri, id_t since_id) {
+static char **add_since_id(enum APIS api, char **uri, tweet_id_t since_id) {
 	if (since_id) {
 		char id[32] = {0};
 		add_que_or_amp(api, uri);
@@ -148,7 +142,7 @@ static char **add_since_id(enum APIS api, char **uri, id_t since_id) {
 	return uri;
 }
 
-static char **add_max_id(enum APIS api, char **uri, id_t max_id) {
+static char **add_max_id(enum APIS api, char **uri, tweet_id_t max_id) {
 	if (max_id) {
 		char id[32] = {0};
 		add_que_or_amp(api, uri);
@@ -204,7 +198,7 @@ static char **add_include_rts(enum APIS api, char **uri, int include_rts, int co
 	return uri;
 }
 
-static char **add_user_id(enum APIS api, char **uri, id_t user_id) {
+static char **add_user_id(enum APIS api, char **uri, tweet_id_t user_id) {
 	if (user_id) {
 		char id[32] = {0};
 		add_que_or_amp(api, uri);
@@ -268,7 +262,7 @@ static char **add_status(enum APIS api, char **uri, char *status) {
 	return uri;
 }
 
-static char **add_in_reply_to_status_id(enum APIS api, char **uri, id_t in_reply_to_status_id) {
+static char **add_in_reply_to_status_id(enum APIS api, char **uri, tweet_id_t in_reply_to_status_id) {
 	if (in_reply_to_status_id) {
 		char id[32] = {0};
 		add_que_or_amp(api, uri);
@@ -295,7 +289,7 @@ static char **add_coods(enum APIS api, char **uri, struct GEOCODE l_l) {
 	return uri;
 }
 
-static char **add_place_id(enum APIS api, char **uri, id_t place_id) {
+static char **add_place_id(enum APIS api, char **uri, tweet_id_t place_id) {
 	if (place_id) {
 		char id[32] = {0};
 		add_que_or_amp(api, uri);
@@ -537,8 +531,8 @@ static char **add_text(enum APIS api, char **uri, char *text) {
 int get_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
-	id_t since_id, //optional. if not 0, add it to argument.
-	id_t max_id, //optional. if not 0, add it to argument.
+	tweet_id_t since_id, //optional. if not 0, add it to argument.
+	tweet_id_t max_id, //optional. if not 0, add it to argument.
 	int trim_user, //optional. if not -1, add it to argument.
 	int contributor_details, //optional. if not -1, add it to argument.
 	int include_entities, //optional. if not -1, add it to argument.
@@ -620,12 +614,12 @@ Example Values: false
 }
 
 int get_user_timeline (
-	id_t user_id, //Always specify either an user_id or screen_name when requesting a user timeline.
+	tweet_id_t user_id, //Always specify either an user_id or screen_name when requesting a user timeline.
 	char *screen_name, //Always specify either an user_id or screen_name when requesting a user timeline.
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
-	id_t since_id, //optional. if not 0, add it to argument.
-	id_t max_id, //optional. if not 0, add it to argument.
+	tweet_id_t since_id, //optional. if not 0, add it to argument.
+	tweet_id_t max_id, //optional. if not 0, add it to argument.
 	int trim_user, //optional. if not -1, add it to argument.
 	int exclude_replies, //optional. if not -1, add it to argument.
 	int contributor_details, //optional. if not -1, add it to argument.
@@ -739,8 +733,8 @@ Example Values: false
 int get_home_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
-	id_t since_id, //optional. if not 0, add it to argument.
-	id_t max_id, //optional. if not 0, add it to argument.
+	tweet_id_t since_id, //optional. if not 0, add it to argument.
+	tweet_id_t max_id, //optional. if not 0, add it to argument.
 	int trim_user, //optional. if not -1, add it to argument.
 	int exclude_replies, //optional. if not -1, add it to argument.
 	int contributor_details, //optional. if not -1, add it to argument.
@@ -832,8 +826,8 @@ Example Values: false
 int get_retweets_of_me (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
-	id_t since_id, //optional. if not 0, add it to argument.
-	id_t max_id, //optional. if not 0, add it to argument.
+	tweet_id_t since_id, //optional. if not 0, add it to argument.
+	tweet_id_t max_id, //optional. if not 0, add it to argument.
 	int trim_user, //optional. if not -1, add it to argument.
 	int include_entities, //optional. if not -1, add it to argument.
 	int include_user_entities //optional. if not -1, add it to argument,however, 1 is recommended.see below.
@@ -918,7 +912,7 @@ Example Values: false
 }
 
 int get_retweets_by_id (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
@@ -988,7 +982,7 @@ Example Values: true
 }
 
 int get_show_by_id (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
 	int include_my_retweet, //optional. if not -1, add it to argument.
@@ -1062,7 +1056,7 @@ Example Values: false
 }
 
 int post_destroy_by_id (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
 	) {
@@ -1126,10 +1120,10 @@ Example Values: true
 int post_update(
 	char *status, //required
 	char **res, // response
-	id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
+	tweet_id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
 	int do_add_l_l, //add it. whether add l_l to argument.
 	struct GEOCODE l_l, //optional. if it is valid figure, add it to argument.
-	id_t place_id, //optional. if not 0, add it to argument.
+	tweet_id_t place_id, //optional. if not 0, add it to argument.
 	int display_coordinates, //optional. if not -1, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
 	)
@@ -1240,7 +1234,7 @@ Example Values: true
 }
 
 int post_retweet_by_id (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
 	) {
@@ -1301,7 +1295,7 @@ Example Values: true
 }
 
 int get_oembed (
-	id_t id, //required. It is not necessary to include both.
+	tweet_id_t id, //required. It is not necessary to include both.
 	char *url, //required. It is not necessary to include both.
 	char **res, //response
 	int maxwidth, //optional? It must be between 250 and 550.
@@ -1430,7 +1424,7 @@ Example Values: fr
 }
 
 int get_retweeters_ids (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res, //response
 	int cursor, //optional. if not 0, add it to argument.
 	int stringify_ids //optional. if not -1, add it to argument.
@@ -1509,8 +1503,8 @@ int get_tweets (
 	int result_type, //optional. If not 0, add it to argument. 1 = "mixed",2="recent",4="popular"
 	int count, //optional. If not 0, add it to argument.
 	char *until, //optional. If not 0, add it to argument.
-	id_t since_id, //optional. If not 0, add it to argument.
-	id_t max_id, //optional. If not 0, add it to argument.
+	tweet_id_t since_id, //optional. If not 0, add it to argument.
+	tweet_id_t max_id, //optional. If not 0, add it to argument.
 	int include_entities, //optional. If not -1, add it to argument.
 	char *callback //optional. If not 0, add it to argument.
 	) {
@@ -1642,8 +1636,8 @@ Example Values: processTweets
 int get_direct_messages (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
-	id_t since_id, //optional. if not 0, add it to argument.
-	id_t max_id, //optional. if not 0, add it to argument.
+	tweet_id_t since_id, //optional. if not 0, add it to argument.
+	tweet_id_t max_id, //optional. if not 0, add it to argument.
 	int include_entities, //optional. if not -1, add it to argument.
 	int skip_status //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	) {
@@ -1717,8 +1711,8 @@ When set to either true, t or 1 statuses will not be included in the returned us
 int get_dm_sent (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
-	id_t since_id, //optional. if not 0, add it to argument.
-	id_t max_id, //optional. if not 0, add it to argument.
+	tweet_id_t since_id, //optional. if not 0, add it to argument.
+	tweet_id_t max_id, //optional. if not 0, add it to argument.
 	int pages, //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	int include_entities //optional. if not -1, add it to argument.
 	) {
@@ -1791,7 +1785,7 @@ Example Values: false
 }
 
 int get_dm_show (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res //response
 	) {
 /*
@@ -1835,7 +1829,7 @@ Example Values: 587424932
 }
 
 int post_dm_destroy (
-	id_t id, //required
+	tweet_id_t id, //required
 	char **res, //response
 	int include_entities //optional. if not -1, add it to argument.
 	) {
@@ -1887,7 +1881,7 @@ Example Values: false
 }
 
 int post_dm_new (
-	id_t user_id, //One of user_id or screen_name are required.
+	tweet_id_t user_id, //One of user_id or screen_name are required.
 	char *screen_name, //One of user_id or screen_name are required.
 	char *text, //required.
 	char **res //response
@@ -1953,8 +1947,3 @@ Example Values: Meet me behind the cafeteria after school
 	return ret;
 }
 
-#ifdef __CYGWIN__
-	#ifdef __id_t_defined
-		#undef tweet_id_t
-	#endif
-#endif
