@@ -11,6 +11,12 @@
 #include <curl/curl.h>
 #include "tweet.h"
 
+#ifdef __CYGWIN__
+	#ifdef __id_t_defined
+		#define id_t tweet_id_t
+	#endif
+#endif
+
 static char **alloc_strcat(char **dest, char const *src) {
 	#ifdef DEBUG
 	puts(__func__);
@@ -1947,3 +1953,8 @@ Example Values: Meet me behind the cafeteria after school
 	return ret;
 }
 
+#ifdef __CYGWIN__
+	#ifdef __id_t_defined
+		#undef tweet_id_t
+	#endif
+#endif

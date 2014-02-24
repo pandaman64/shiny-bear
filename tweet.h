@@ -2,6 +2,12 @@
 #ifndef __TWEET_H
 #define __TWEET_H
 
+#ifdef __CYGWIN__
+	#ifdef __id_t_defined
+		#define id_t tweet_id_t
+	#endif
+#endif
+
 typedef unsigned long long int id_t;
 
 enum APIS {
@@ -215,4 +221,13 @@ int post_dm_new (
 	char *text, //required.
 	char **res //response
 	);
+
+#ifdef __CYGWIN__
+	#ifdef __id_t_defined
+		#undef tweet_id_t
+	#endif
+#endif
+
+
+
 #endif
