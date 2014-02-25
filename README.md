@@ -57,3 +57,8 @@ Currently this library has wrappers for following twitter REST APIs:
 - [direct_messages/show](https://dev.twitter.com/docs/api/1.1/get/direct_messages/show)
 - [direct_messages/destroy](https://dev.twitter.com/docs/api/1.1/post/direct_messages/destroy)
 - [direct_messages/new](https://dev.twitter.com/docs/api/1.1/post/direct_messages/new)
+
+**Friends & Followers**
+- [friendships/no_retweets/ids](https://dev.twitter.com/docs/api/1.1/get/friendships/no_retweets/ids)
+- [friends/ids](https://dev.twitter.com/docs/api/1.1/get/friends/ids)
+

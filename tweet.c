@@ -102,6 +102,8 @@ char const * api_uri[] = {
 [DM_SHOW] = "direct_messages/show.json",
 [DM_DESTROY] = "direct_messages/destroy.json ",
 [DM_NEW] = "direct_messages/new.json",
+[NO_RETWEETS_IDS] = "friendships/no_retweets/ids.json",
+[FRIENDS_IDS] = "friends/ids.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -524,6 +526,17 @@ static char **add_text(enum APIS api, char **uri, char *text) {
 		alloc_strcat(uri, "text=");
 		alloc_strcat(uri, escaped_msg);
 		free(escaped_msg);escaped_msg = NULL;
+	}
+	return uri;
+}
+
+static char **add_count_upto_5000(enum APIS api, char **uri, int count) {
+	if (count) {
+		char cnt[8] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "count=");
+		snprintf(cnt, sizeof(cnt), "%d", count<5001?count:5000);
+		alloc_strcat(uri, cnt);
 	}
 	return uri;
 }
@@ -1946,4 +1959,136 @@ Example Values: Meet me behind the cafeteria after school
 
 	return ret;
 }
+
+int get_no_retweets_ids (
+	char **res, //response
+	int stringify_ids //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/friendships/no_retweets/ids.json
+Parameters
+stringify_ids optional
+
+Many programming environments will not consume our ids due to their size. Provide this option to have ids returned as strings instead. Read more about Twitter IDs, JSON and Snowflake. This parameter is especially important to use in Javascript environments.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = NO_RETWEETS_IDS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_stringify_ids(api, &uri, stringify_ids);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+
+int get_friends_ids (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids, //optional. if not -1, add it to argument.
+	int count //optional. if not 0, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/friends/ids.json
+Parameters
+
+Either a screen_name or a user_id must be provided.
+
+user_id optional
+
+The ID of the user for whom to return results for.
+
+Example Values: 12345
+
+screen_name optional
+
+The screen name of the user for whom to return results for.
+
+Example Values: noradio
+
+cursor semi-optional
+
+Causes the list of connections to be broken into pages of no more than 5000 IDs at a time. The number of IDs returned is not guaranteed to be 5000 as suspended users are filtered out after connections are queried. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+Example Values: 12893764510938
+
+stringify_ids optional
+
+Many programming environments will not consume our Tweet ids due to their size. Provide this option to have ids returned as strings instead. More about Twitter IDs, JSON and Snowflake.
+
+Example Values: true
+
+count optional
+
+Specifies the number of IDs attempt retrieval of, up to a maximum of 5,000 per distinct request. The value of count is best thought of as a limit to the number of results to return. When using the count parameter with this method, it is wise to use a consistent count value across all requests to the same user's collection. Usage of this parameter is encouraged in environments where all 5,000 IDs constitutes too large of a response.
+
+Example Values: 2048
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FRIENDS_IDS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_cursor(api, &uri, cursor);
+	add_stringify_ids(api, &uri, stringify_ids);
+	add_count_upto_5000(api, &uri, count);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
 

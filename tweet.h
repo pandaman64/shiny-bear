@@ -21,6 +21,8 @@ enum APIS {
 	DM_SHOW,
 	DM_DESTROY,
 	DM_NEW,
+	NO_RETWEETS_IDS,
+	FRIENDS_IDS,
 	NUM_OF_APIS
 };
 
@@ -215,5 +217,17 @@ int post_dm_new (
 	char **res //response
 	);
 
+int get_no_retweets_ids (
+	char **res, //response
+	int stringify_ids //optional. if not -1, add it to argument.
+	);
 
+int get_friends_ids (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids, //optional. if not -1, add it to argument.
+	int count //optional. if not 0, add it to argument.
+	);
 #endif
