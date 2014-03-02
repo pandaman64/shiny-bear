@@ -61,4 +61,13 @@ Currently this library has wrappers for following twitter REST APIs:
 **Friends & Followers**
 - [friendships/no_retweets/ids](https://dev.twitter.com/docs/api/1.1/get/friendships/no_retweets/ids)
 - [friends/ids](https://dev.twitter.com/docs/api/1.1/get/friends/ids)
-
+- [followers/ids](https://dev.twitter.com/docs/api/1.1/get/followers/ids)
+- [friendships/incoming](https://dev.twitter.com/docs/api/1.1/get/friendships/incoming)
+- [friendships/outgoing](https://dev.twitter.com/docs/api/1.1/get/friendships/outgoing)
+- [friendships/create](https://dev.twitter.com/docs/api/1.1/post/friendships/create)
+- [friendships/destroy](https://dev.twitter.com/docs/api/1.1/post/friendships/destroy)
+- [friendships/update](https://dev.twitter.com/docs/api/1.1/post/friendships/update)
+- [friendships/show](https://dev.twitter.com/docs/api/1.1/get/friendships/show)
+- [friends/list](https://dev.twitter.com/docs/api/1.1/get/friends/list)
+- [followers/list](https://dev.twitter.com/docs/api/1.1/get/followers/list)
+- [friendships/lookup](https://dev.twitter.com/docs/api/1.1/get/friendships/lookup)
