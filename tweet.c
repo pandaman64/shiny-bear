@@ -102,8 +102,18 @@ char const * api_uri[] = {
 [DM_SHOW] = "direct_messages/show.json",
 [DM_DESTROY] = "direct_messages/destroy.json ",
 [DM_NEW] = "direct_messages/new.json",
-[NO_RETWEETS_IDS] = "friendships/no_retweets/ids.json",
+[FS_NO_RETWEETS_IDS] = "friendships/no_retweets/ids.json",
 [FRIENDS_IDS] = "friends/ids.json",
+[FOLLOWERS_IDS] = "followers/ids.json",
+[FS_LOOKUP] = "friendships/lookup.json",
+[FS_INCOMING] = "friendships/incoming.json",
+[FS_OUTGOING] = "friendships/outgoing.json",
+[FS_CREATE] = "friendships/create.json",
+[FS_DESTROY] = "friendships/destroy.json",
+[FS_UPDATE] = "friendships/update.json",
+[FS_SHOW] = "friendships/show.json",
+[FRIENDS_LIST] = "friends/list.json",
+[FOLLOWERS_LIST] = "followers/list.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -537,6 +547,88 @@ static char **add_count_upto_5000(enum APIS api, char **uri, int count) {
 		alloc_strcat(uri, "count=");
 		snprintf(cnt, sizeof(cnt), "%d", count<5001?count:5000);
 		alloc_strcat(uri, cnt);
+	}
+	return uri;
+}
+
+static char **add_user_id_str(enum APIS api, char **uri, char *user_id) {
+	if (user_id && *user_id) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "user_id=");
+		alloc_strcat(uri, user_id);
+	}
+	return uri;
+}
+
+static char **add_follow(enum APIS api, char **uri, int follow) {
+	if (follow != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "follow=");
+		snprintf(boolian, sizeof(boolian), "%d", !!follow);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_device(enum APIS api, char **uri, int device) {
+	if (device != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "device=");
+		snprintf(boolian, sizeof(boolian), "%d", !!device);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_retweets(enum APIS api, char **uri, int retweets) {
+	if (retweets != -1) {
+		char boolian[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "retweets=");
+		snprintf(boolian, sizeof(boolian), "%d", !!retweets);
+		alloc_strcat(uri, boolian);
+	}
+	return uri;
+}
+
+static char **add_source_id(enum APIS api, char **uri, tweet_id_t source_id) {
+	if (source_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "source_id=");
+		snprintf(id, sizeof(id), "%llu", source_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_source_screen_name(enum APIS api, char **uri, char *source_screen_name) {
+	if (source_screen_name && *source_screen_name) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "source_screen_name=");
+		alloc_strcat(uri, source_screen_name);
+	}
+	return uri;
+}
+
+static char **add_target_id(enum APIS api, char **uri, tweet_id_t target_id) {
+	if (target_id) {
+		char id[32] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "target_id=");
+		snprintf(id, sizeof(id), "%llu", target_id);
+		alloc_strcat(uri, id);
+	}
+	return uri;
+}
+
+static char **add_target_screen_name(enum APIS api, char **uri, char *target_screen_name) {
+	if (target_screen_name && *target_screen_name) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "target_screen_name=");
+		alloc_strcat(uri, target_screen_name);
 	}
 	return uri;
 }
@@ -1960,7 +2052,7 @@ Example Values: Meet me behind the cafeteria after school
 	return ret;
 }
 
-int get_no_retweets_ids (
+int get_fs_no_retweets_ids (
 	char **res, //response
 	int stringify_ids //optional. if not -1, add it to argument.
 	) {
@@ -1985,7 +2077,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = NO_RETWEETS_IDS;
+	enum APIS api = FS_NO_RETWEETS_IDS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -2003,7 +2095,6 @@ Example Values: true
 
 	return ret;
 }
-
 
 int get_friends_ids (
 	char **res, //response
@@ -2091,4 +2182,721 @@ Example Values: 2048
 	return ret;
 }
 
+int get_followers_ids (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids, //optional. if not -1, add it to argument.
+	int count //optional. if not 0, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/followers/ids.json
+
+Parameters
+
+Either a screen_name or a user_id must be provided.
+
+user_id optional
+
+The ID of the user for whom to return results for.
+
+Example Values: 12345
+
+screen_name optional
+
+The screen name of the user for whom to return results for.
+
+Example Values: noradio
+
+cursor semi-optional
+
+Causes the list of connections to be broken into pages of no more than 5000 IDs at a time. The number of IDs returned is not guaranteed to be 5000 as suspended users are filtered out after connections are queried. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+Example Values: 12893764510938
+
+stringify_ids optional
+
+Many programming environments will not consume our Tweet ids due to their size. Provide this option to have ids returned as strings instead. More about Twitter IDs, JSON and Snowflake.
+
+Example Values: true
+
+count optional
+
+Specifies the number of IDs attempt retrieval of, up to a maximum of 5,000 per distinct request. The value of count is best thought of as a limit to the number of results to return. When using the count parameter with this method, it is wise to use a consistent count value across all requests to the same user's collection. Usage of this parameter is encouraged in environments where all 5,000 IDs constitutes too large of a response.
+
+Example Values: 2048
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FOLLOWERS_IDS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_cursor(api, &uri, cursor);
+	add_stringify_ids(api, &uri, stringify_ids);
+	add_count_upto_5000(api, &uri, count);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_fs_lookup (
+	char **res, //response
+	char *screen_name, //optional. if not 0, add it to argument.
+	char *user_id //optional. if not 0, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/friendships/lookup.json
+Parameters
+screen_name optional
+
+A comma separated list of screen names, up to 100 are allowed in a single request.
+
+Example Values: twitterapi,twitter
+
+user_id optional
+
+A comma separated list of user IDs, up to 100 are allowed in a single request.
+
+Example Values: 783214,6253282
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_LOOKUP;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_screen_name(api, &uri, screen_name);
+	add_user_id_str(api, &uri, user_id);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_fs_incoming (
+	char **res, //response
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/friendships/incoming.json
+Parameters
+cursor semi-optional
+
+Causes the list of connections to be broken into pages of no more than 5000 IDs at a time. The number of IDs returned is not guaranteed to be 5000 as suspended users are filtered out after connections are queried. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+Example Values: 12893764510938
+
+stringify_ids optional
+
+Many programming environments will not consume our Tweet ids due to their size. Provide this option to have ids returned as strings instead. More about Twitter IDs, JSON and Snowflake.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_INCOMING;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_cursor(api, &uri, cursor);
+	add_stringify_ids(api, &uri, stringify_ids);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_fs_outgoing (
+	char **res, //response
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/friendships/outgoing.format
+Parameters
+cursor semi-optional
+
+Causes the list of connections to be broken into pages of no more than 5000 IDs at a time. The number of IDs returned is not guaranteed to be 5000 as suspended users are filtered out after connections are queried. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+Example Values: 12893764510938
+
+stringify_ids optional
+
+Many programming environments will not consume our Tweet ids due to their size. Provide this option to have ids returned as strings instead. More about Twitter IDs, JSON and Snowflake.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_OUTGOING;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_cursor(api, &uri, cursor);
+	add_stringify_ids(api, &uri, stringify_ids);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int post_fs_create (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int follow //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/friendships/create.json
+Parameters
+
+Providing either screen_name or user_id is required.
+screen_name optional
+
+The screen name of the user for whom to befriend.
+
+Example Values: noradio
+
+user_id optional
+
+The ID of the user for whom to befriend.
+
+Example Values: 12345
+
+follow optional
+
+Enable notifications for the target user.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_CREATE;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_follow(api, &uri, follow);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int post_fs_destroy (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name //optional. if not 0, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/friendships/destroy.json
+Parameters
+
+Providing either screen_name or user_id is required.
+
+screen_name optional
+
+The screen name of the user for whom to unfollow.
+
+Example Values: noradio
+
+user_id optional
+
+The ID of the user for whom to unfollow.
+
+Example Values: 12345
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_DESTROY;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int post_fs_update (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int device, //optional. if not -1, add it to argument.
+	int retweets //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/friendships/update.json
+Parameters
+
+Providing either screen_name or user_id is required.
+
+screen_name optional
+
+The screen name of the user for whom to befriend.
+
+Example Values: noradio
+
+user_id optional
+
+The ID of the user for whom to befriend.
+
+Example Values: 12345
+
+device optional
+
+Enable/disable device notifications from the target user.
+
+Example Values: true, false
+
+retweets optional
+
+Enable/disable retweets from the target user.
+
+Example Values: true, false
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_UPDATE;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_device(api, &uri, device);
+	add_retweets(api, &uri, retweets);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, post, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_fs_show (
+	char **res, //response
+	tweet_id_t source_id, //optional. if not 0, add it to argument.
+	char *source_screen_name, //optional. if not 0, add it to argument.
+	tweet_id_t target_id, //optional. if not 0, add it to argument.
+	char *target_screen_name //optional. if not 0, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/friendships/show.json
+Parameters
+
+At least one source and one target, whether specified by IDs or screen_names, should be provided to this method.
+
+source_id optional
+
+The user_id of the subject user.
+
+Example Values: 3191321
+
+source_screen_name optional
+
+The screen_name of the subject user.
+
+Example Values: raffi
+
+target_id optional
+
+The user_id of the target user.
+
+Example Values: 20
+
+target_screen_name optional
+
+The screen_name of the target user.
+
+Example Values: noradio
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(source_id || (source_screen_name && source_screen_name[0])) && !(target_id || (target_screen_name && target_screen_name[0]))) {
+		fprintf(stderr, "At least one source and one target, whether specified by IDs or screen_names");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FS_SHOW;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_source_id(api, &uri, source_id);
+	add_source_screen_name(api, &uri, source_screen_name);
+	add_target_id(api, &uri, target_id);
+	add_target_screen_name(api, &uri, target_screen_name);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_friends_list (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int count, //optional. if not 0, add it to argument.
+	int skip_status, //optional. if not -1, add it to argument.
+	int include_user_entities //optional. if not -1, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/friends/list.json
+Parameters
+
+Either a screen_name or a user_id should be provided.
+
+user_id optional
+
+The ID of the user for whom to return results for.
+
+Example Values: 12345
+
+screen_name optional
+
+The screen name of the user for whom to return results for.
+
+Example Values: noradio
+
+cursor semi-optional
+
+Causes the results to be broken into pages. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+Example Values: 12893764510938
+
+countoptional
+
+The number of users to return per page, up to a maximum of 200. Defaults to 20.
+
+Example Values: 42
+
+skip_status optional
+
+When set to either true, t or 1 statuses will not be included in the returned user objects.
+
+Example Values: false
+
+include_user_entities optional
+
+The user object entities node will be disincluded when set to false.
+
+Example Values: false
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FRIENDS_LIST;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_cursor(api, &uri, cursor);
+	add_count(api, &uri, count);
+	add_skip_status(api, &uri, skip_status);
+	add_include_user_entities(api, &uri, include_user_entities);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
+
+int get_followers_list (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int count, //optional. if not 0, add it to argument.
+	int skip_status, //optional. if not -1, add it to argument.
+	int include_user_entities //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/followers/list.json
+Parameters
+
+Either a screen_name or a user_id should be provided.
+
+user_id optional
+
+The ID of the user for whom to return results for.
+
+Example Values: 12345
+
+screen_name optional
+
+The screen name of the user for whom to return results for.
+
+Example Values: noradio
+
+cursor semi-optional
+
+Causes the results to be broken into pages. If no cursor is provided, a value of -1 will be assumed, which is the first "page."
+
+The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.
+
+Example Values: 12893764510938
+
+count optional
+
+The number of users to return per page, up to a maximum of 200. Defaults to 20.
+
+Example Values: 42
+
+skip_status optional
+
+When set to either true, t or 1 statuses will not be included in the returned user objects.
+
+Example Values: false
+
+include_user_entities optional
+
+The user object entities node will be disincluded when set to false.
+
+Example Values: false
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+	
+	if (!check_keys()) {
+		fprintf(stderr, "need init_keys()\n");
+		return 0;
+	}
+	
+	if (!(user_id || (screen_name && screen_name[0]))) {
+		fprintf(stderr, "need user_id number or screen_name text\n");
+		return 0;
+	}
+	
+	char *uri = NULL;
+	enum APIS api = FOLLOWERS_LIST;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+	
+	add_user_id(api, &uri, user_id);
+	add_screen_name(api, &uri, screen_name);
+	add_cursor(api, &uri, cursor);
+	add_count(api, &uri, count);
+	add_skip_status(api, &uri, skip_status);
+	add_include_user_entities(api, &uri, include_user_entities);
+	
+	char *post = NULL;
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	int ret = http_request(request, NULL, res);
+
+
+	free(uri);uri = NULL;
+	free(request);request = NULL;
+	free(post);post = NULL;
+
+
+	return ret;
+}
 

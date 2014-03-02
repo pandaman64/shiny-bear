@@ -21,8 +21,18 @@ enum APIS {
 	DM_SHOW,
 	DM_DESTROY,
 	DM_NEW,
-	NO_RETWEETS_IDS,
+	FS_NO_RETWEETS_IDS,
 	FRIENDS_IDS,
+	FOLLOWERS_IDS,
+	FS_LOOKUP,
+	FS_INCOMING,
+	FS_OUTGOING,
+	FS_CREATE,
+	FS_DESTROY,
+	FS_UPDATE,
+	FS_SHOW,
+	FRIENDS_LIST,
+	FOLLOWERS_LIST,
 	NUM_OF_APIS
 };
 
@@ -229,5 +239,81 @@ int get_friends_ids (
 	int cursor, //optional. if not 0, add it to argument.
 	int stringify_ids, //optional. if not -1, add it to argument.
 	int count //optional. if not 0, add it to argument.
+	);
+
+int get_followers_ids (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids, //optional. if not -1, add it to argument.
+	int count //optional. if not 0, add it to argument.
+	);
+
+int get_fs_lookup (
+	char **res, //response
+	char *screen_name, //optional. if not 0, add it to argument.
+	char *user_id //optional. if not 0, add it to argument.
+	);
+
+int get_fs_incoming (
+	char **res, //response
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids //optional. if not -1, add it to argument.
+	);
+
+int get_fs_outgoing (
+	char **res, //response
+	int cursor, //optional. if not 0, add it to argument.
+	int stringify_ids //optional. if not -1, add it to argument.
+	);
+
+int post_fs_create (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int follow //optional. if not -1, add it to argument.
+	);
+
+int post_fs_destroy (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name //optional. if not 0, add it to argument.
+	);
+
+int post_fs_update (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int device, //optional. if not -1, add it to argument.
+	int retweets //optional. if not -1, add it to argument.
+	);
+
+int get_fs_show (
+	char **res, //response
+	tweet_id_t source_id, //optional. if not 0, add it to argument.
+	char *source_screen_name, //optional. if not 0, add it to argument.
+	tweet_id_t target_id, //optional. if not 0, add it to argument.
+	char *target_screen_name //optional. if not 0, add it to argument.
+	);
+
+int get_friends_list (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int count, //optional. if not 0, add it to argument.
+	int skip_status, //optional. if not -1, add it to argument.
+	int include_user_entities //optional. if not -1, add it to argument.
+	);
+
+int get_followers_list (
+	char **res, //response
+	tweet_id_t user_id, //optional. if not 0, add it to argument.
+	char *screen_name, //optional. if not 0, add it to argument.
+	int cursor, //optional. if not 0, add it to argument.
+	int count, //optional. if not 0, add it to argument.
+	int skip_status, //optional. if not -1, add it to argument.
+	int include_user_entities //optional. if not -1, add it to argument.
 	);
 #endif
