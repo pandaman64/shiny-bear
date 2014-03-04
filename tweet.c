@@ -85,18 +85,18 @@ int check_keys(void) {
 char const *api_uri_1_1 = "https://api.twitter.com/1.1/";
 
 char const * api_uri[] = {
-[MENTIONS_TIMELINE] = "statuses/mentions_timeline.json",
-[USER_TIMELINE] = "statuses/user_timeline.json",
-[HOME_TIMELINE]  = "statuses/home_timeline.json",
-[RETWEETS_OF_ME] = "statuses/retweets_of_me.json",
-[RETWEETS_BY_ID] = "statuses/retweets/",
-[SHOW_BY_ID] = "statuses/show.json",
-[DESTROY_BY_ID] = "statuses/destroy/",
-[RETWEET_BY_ID] = "statuses/retweet/",
-[UPDATE] = "statuses/update.json",
-[OEMBED] = "statuses/oembed.json",
-[RETWEETERS_IDS] = "retweeters/ids.json",
-[TWEETS] = "search/tweets.json",
+[STATUSES_MENTIONS_TIMELINE] = "statuses/mentions_timeline.json",
+[STATUSES_USER_TIMELINE] = "statuses/user_timeline.json",
+[STATUSES_HOME_TIMELINE]  = "statuses/home_timeline.json",
+[STATUSES_RETWEETS_OF_ME] = "statuses/retweets_of_me.json",
+[STATUSES_RETWEETS_BY_ID] = "statuses/retweets/",
+[STATUSES_SHOW_BY_ID] = "statuses/show.json",
+[STATUSES_DESTROY_BY_ID] = "statuses/destroy/",
+[STATUSES_RETWEET_BY_ID] = "statuses/retweet/",
+[STATUSES_UPDATE] = "statuses/update.json",
+[STATUSES_OEMBED] = "statuses/oembed.json",
+[STATUSES_RETWEETERS_IDS] = "statuses/retweeters/ids.json",
+[SEARCH_TWEETS] = "search/tweets.json",
 [DIRECT_MESSAGES] = "direct_messages.json",
 [DM_SENT] = "direct_messages/sent.json",
 [DM_SHOW] = "direct_messages/show.json",
@@ -633,7 +633,7 @@ static char **add_target_screen_name(enum APIS api, char **uri, char *target_scr
 	return uri;
 }
 
-int get_mentions_timeline (
+int get_statuses_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	tweet_id_t since_id, //optional. if not 0, add it to argument.
@@ -693,7 +693,7 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
-	enum APIS api = MENTIONS_TIMELINE;
+	enum APIS api = STATUSES_MENTIONS_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -718,7 +718,7 @@ Example Values: false
 	return ret;
 }
 
-int get_user_timeline (
+int get_statuses_user_timeline (
 	tweet_id_t user_id, //Always specify either an user_id or screen_name when requesting a user timeline.
 	char *screen_name, //Always specify either an user_id or screen_name when requesting a user timeline.
 	char **res, //response
@@ -808,7 +808,7 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
-	enum APIS api = USER_TIMELINE;
+	enum APIS api = STATUSES_USER_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -835,7 +835,7 @@ Example Values: false
 	return ret;
 }
 
-int get_home_timeline (
+int get_statuses_home_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	tweet_id_t since_id, //optional. if not 0, add it to argument.
@@ -903,7 +903,7 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
-	enum APIS api = HOME_TIMELINE;
+	enum APIS api = STATUSES_HOME_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -928,7 +928,7 @@ Example Values: false
 	return ret;
 }
 
-int get_retweets_of_me (
+int get_statuses_retweets_of_me (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	tweet_id_t since_id, //optional. if not 0, add it to argument.
@@ -991,7 +991,7 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
-	enum APIS api = RETWEETS_OF_ME;
+	enum APIS api = STATUSES_RETWEETS_OF_ME;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -1016,7 +1016,7 @@ Example Values: false
 	return ret;
 }
 
-int get_retweets_by_id (
+int get_statuses_retweets_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
@@ -1061,7 +1061,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = RETWEETS_BY_ID;
+	enum APIS api = STATUSES_RETWEETS_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	char i[32] = {0};
@@ -1086,7 +1086,7 @@ Example Values: true
 	return ret;
 }
 
-int get_show_by_id (
+int get_statuses_show_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
@@ -1138,7 +1138,7 @@ Example Values: false
 	}
 	
 	char *uri = NULL;
-	enum APIS api = SHOW_BY_ID;
+	enum APIS api = STATUSES_SHOW_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 
@@ -1160,7 +1160,7 @@ Example Values: false
 	return ret;
 }
 
-int post_destroy_by_id (
+int post_statuses_destroy_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
@@ -1198,7 +1198,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = DESTROY_BY_ID;
+	enum APIS api = STATUSES_DESTROY_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	char i[32] = {0};
@@ -1222,7 +1222,7 @@ Example Values: true
 }
 
 
-int post_update(
+int post_statuses_update(
 	char *status, //required
 	char **res, // response
 	tweet_id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
@@ -1313,7 +1313,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = UPDATE;
+	enum APIS api = STATUSES_UPDATE;
 	alloc_strcat(&uri, api_uri_1_1);
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -1338,7 +1338,7 @@ Example Values: true
 	return ret;
 }
 
-int post_retweet_by_id (
+int post_statuses_retweet_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
@@ -1376,7 +1376,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = RETWEET_BY_ID;
+	enum APIS api = STATUSES_RETWEET_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	char i[32] = {0};
@@ -1399,7 +1399,7 @@ Example Values: true
 	return ret;
 }
 
-int get_oembed (
+int get_statuses_oembed (
 	tweet_id_t id, //required. It is not necessary to include both.
 	char *url, //required. It is not necessary to include both.
 	char **res, //response
@@ -1501,7 +1501,7 @@ Example Values: fr
 	
 	
 	char *uri = NULL;
-	enum APIS api = OEMBED;
+	enum APIS api = STATUSES_OEMBED;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 
@@ -1528,7 +1528,7 @@ Example Values: fr
 	return ret;
 }
 
-int get_retweeters_ids (
+int get_statuses_retweeters_ids (
 	tweet_id_t id, //required
 	char **res, //response
 	int cursor, //optional. if not 0, add it to argument.
@@ -1577,7 +1577,7 @@ Example Values: true
 	}
 	
 	char *uri = NULL;
-	enum APIS api = RETWEETERS_IDS;
+	enum APIS api = STATUSES_RETWEETERS_IDS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 	
@@ -1599,7 +1599,7 @@ Example Values: true
 	return ret;
 }
 
-int get_tweets (
+int get_search_tweets (
 	char *q, //required
 	char **res, //response
 	struct GEOCODE geocode, //optional. If it is valid, add it to argument.
@@ -1707,7 +1707,7 @@ Example Values: processTweets
 		return 0;
 	}
 	char *uri = NULL;
-	enum APIS api = TWEETS;
+	enum APIS api = SEARCH_TWEETS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
 

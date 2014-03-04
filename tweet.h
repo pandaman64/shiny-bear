@@ -4,18 +4,18 @@
 typedef unsigned long long int tweet_id_t;
 
 enum APIS {
-	MENTIONS_TIMELINE,
-	USER_TIMELINE,
-	HOME_TIMELINE,
-	RETWEETS_OF_ME,
-	RETWEETS_BY_ID,
-	SHOW_BY_ID,
-	DESTROY_BY_ID,
-	UPDATE,
-	RETWEET_BY_ID,
-	OEMBED,
-	RETWEETERS_IDS,
-	TWEETS,
+	STATUSES_MENTIONS_TIMELINE,
+	STATUSES_USER_TIMELINE,
+	STATUSES_HOME_TIMELINE,
+	STATUSES_RETWEETS_OF_ME,
+	STATUSES_RETWEETS_BY_ID,
+	STATUSES_SHOW_BY_ID,
+	STATUSES_DESTROY_BY_ID,
+	STATUSES_UPDATE,
+	STATUSES_RETWEET_BY_ID,
+	STATUSES_OEMBED,
+	STATUSES_RETWEETERS_IDS,
+	SEARCH_TWEETS,
 	DIRECT_MESSAGES,
 	DM_SENT,
 	DM_SHOW,
@@ -71,7 +71,7 @@ struct GEOCODE{
 #define RECENT 2
 #define POPULAR 4
 
-int get_mentions_timeline (
+int get_statuses_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	tweet_id_t since_id, //optional. if not 0, add it to argument.
@@ -82,7 +82,7 @@ int get_mentions_timeline (
 	int include_rts //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	);
 
-int get_user_timeline (
+int get_statuses_user_timeline (
 	tweet_id_t user_id, //Always specify either an user_id or screen_name when requesting a user timeline.
 	char *screen_name, //Always specify either an user_id or screen_name when requesting a user timeline.
 	char **res, //response
@@ -95,7 +95,7 @@ int get_user_timeline (
 	int include_rts //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	);
 
-int get_home_timeline (
+int get_statuses_home_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	tweet_id_t since_id, //optional. if not 0, add it to argument.
@@ -106,7 +106,7 @@ int get_home_timeline (
 	int include_entities //optional. if not -1, add it to argument.
 	);
 
-int get_retweets_of_me (
+int get_statuses_retweets_of_me (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	tweet_id_t since_id, //optional. if not 0, add it to argument.
@@ -116,14 +116,14 @@ int get_retweets_of_me (
 	int include_user_entities //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	);
 
-int get_retweets_by_id (
+int get_statuses_retweets_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
 	int trim_user //optional. if not -1, add it to argument.
 	);
 
-int get_show_by_id (
+int get_statuses_show_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int trim_user, //optional. if not -1, add it to argument.
@@ -131,13 +131,13 @@ int get_show_by_id (
 	int include_entities //optional. if not -1, add it to argument.
 	);
 	
-int post_destroy_by_id (
+int post_statuses_destroy_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
 	);
 	
-int post_update(
+int post_statuses_update(
 	char *update, //required
 	char **res, // response
 	tweet_id_t in_reply_to_status_id, //optional. if not 0, add it to argument.
@@ -148,7 +148,7 @@ int post_update(
 	int trim_user //optional. if not -1, add it to argument.
 	);
 
-int post_retweet_by_id (
+int post_statuses_retweet_by_id (
 	tweet_id_t id, //required
 	char **res, //response
 	int trim_user //optional. if not -1, add it to argument.
@@ -156,7 +156,7 @@ int post_retweet_by_id (
 
 //POST statuses/update_with_media is too difficult to implement
 
-int get_oembed (
+int get_statuses_oembed (
 	tweet_id_t id, //required. It is not necessary to include both.
 	char *url, //required. It is not necessary to include both.
 	char **res, //response
@@ -169,14 +169,14 @@ int get_oembed (
 	char *lang //optional? If it is valid, add it to argument.
 	);
 	
-int get_retweeters_ids (
+int get_statuses_retweeters_ids (
 	tweet_id_t id, //required
 	char **res, //response
 	int cursor, //optional. if not 0, add it to argument.
 	int stringify_ids //optional. if not -1, add it to argument.
 	);
 
-int get_tweets (
+int get_search_tweets (
 	char *q, //required
 	char **res, //response
 	struct GEOCODE geocode, //optional. If it is valid, add it to argument.
