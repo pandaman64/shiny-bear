@@ -10,6 +10,9 @@ OBJS = \
 
 all: $(TARGET)
 
+lib: $(OBJS)
+	cp tweet.o tweet.a
+
 $(TARGET): $(OBJS)
 	$(CC) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
