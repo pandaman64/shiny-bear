@@ -72,14 +72,14 @@ static int http_request(char const *u, char const *p, char **rep) {
 	return ret;
 }
 
-static union KEYS keys = {.keys_array = {NULL,NULL,NULL,NULL}}; 
+static union KEYS *keys = NULL;
 
-union KEYS init_keys(union KEYS k) {
+union KEYS *register_keys(union KEYS *k) {
 	return keys = k;
 }
 
 int check_keys(void) {
-	return keys.keys_array[0]&&keys.keys_array[1]&&keys.keys_array[2]&&keys.keys_array[3];
+	return keys->keys_array[0]&&keys->keys_array[1]&&keys->keys_array[2]&&keys->keys_array[3];
 }
 
 char const *api_uri_1_1 = "https://api.twitter.com/1.1/";
@@ -706,7 +706,7 @@ Example Values: false
 	add_include_rts(api, &uri, include_rts, count);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -823,7 +823,7 @@ Example Values: false
 	add_include_rts(api, &uri, include_rts, count);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -916,7 +916,7 @@ Example Values: false
 	add_include_entities(api, &uri, include_entities);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1004,7 +1004,7 @@ Example Values: false
 
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1074,7 +1074,7 @@ Example Values: true
 
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1148,7 +1148,7 @@ Example Values: false
 	add_include_entities(api, &uri, include_entities);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1209,7 +1209,7 @@ Example Values: true
 
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -1328,7 +1328,7 @@ Example Values: true
 
 
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 	
 	free(uri);uri = NULL;
@@ -1387,7 +1387,7 @@ Example Values: true
 
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -1516,7 +1516,7 @@ Example Values: fr
 	add_lang(api, &uri, lang);
 
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1587,7 +1587,7 @@ Example Values: true
 
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1726,7 +1726,7 @@ Example Values: processTweets
 
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1801,7 +1801,7 @@ When set to either true, t or 1 statuses will not be included in the returned us
 	add_skip_status(api, &uri, skip_status);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1877,7 +1877,7 @@ Example Values: false
 	add_include_entities(api, &uri, include_entities);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1921,7 +1921,7 @@ Example Values: 587424932
 	add_id(api, &uri, id);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -1973,7 +1973,7 @@ Example Values: false
 	add_include_entities(api, &uri, include_entities);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -2040,7 +2040,7 @@ Example Values: Meet me behind the cafeteria after school
 	add_text(api, &uri, text);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -2084,7 +2084,7 @@ Example Values: true
 	add_stringify_ids(api, &uri, stringify_ids);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2170,7 +2170,7 @@ Example Values: 2048
 	add_count_upto_5000(api, &uri, count);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2258,7 +2258,7 @@ Example Values: 2048
 	add_count_upto_5000(api, &uri, count);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2311,7 +2311,7 @@ Example Values: 783214,6253282
 	add_user_id_str(api, &uri, user_id);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2366,7 +2366,7 @@ Example Values: true
 	add_stringify_ids(api, &uri, stringify_ids);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2420,7 +2420,7 @@ Example Values: true
 	add_stringify_ids(api, &uri, stringify_ids);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2488,7 +2488,7 @@ Example Values: true
 	add_follow(api, &uri, follow);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -2547,7 +2547,7 @@ Example Values: 12345
 	add_screen_name(api, &uri, screen_name);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -2623,7 +2623,7 @@ Example Values: true, false
 	add_retweets(api, &uri, retweets);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, post, res);
 
 
@@ -2699,7 +2699,7 @@ Example Values: noradio
 	add_target_screen_name(api, &uri, target_screen_name);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2794,7 +2794,7 @@ Example Values: false
 	add_include_user_entities(api, &uri, include_user_entities);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
@@ -2888,7 +2888,7 @@ Example Values: false
 	add_include_user_entities(api, &uri, include_user_entities);
 	
 	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
+	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
 	int ret = http_request(request, NULL, res);
 
 
