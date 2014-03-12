@@ -23,4 +23,5 @@ $(TARGET): $(OBJS)
 clean:
 	-rm $(TARGET)
 	-rm *.o
+	-rm *.a
 
