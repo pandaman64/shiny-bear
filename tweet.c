@@ -167,45 +167,45 @@ static char **add_max_id(enum APIS api, char **uri, tweet_id_t max_id) {
 
 static char **add_trim_user(enum APIS api, char **uri, int trim_user) {
 	if (trim_user != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!trim_user);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_contributor_details(enum APIS api, char **uri, int contributor_details) {
 	if (contributor_details != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "contributor_details=");
-		snprintf(boolian, sizeof(boolian), "%d", !!contributor_details);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!contributor_details);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_entities(enum APIS api, char **uri, int include_entities) {
 	if (include_entities != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_entities);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!include_entities);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_rts(enum APIS api, char **uri, int include_rts, int count) {
 	if (count || (include_rts != -1)) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_rts=");
 
-		snprintf(boolian, sizeof(boolian), "%d", count || (include_rts != -1));
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", count || (include_rts != -1));
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -232,33 +232,33 @@ static char **add_screen_name(enum APIS api, char **uri, char *screen_name) {
 
 static char **add_exclude_replies(enum APIS api, char **uri, int exclude_replies) {
 	if (exclude_replies != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "exclude_replies=");
-		snprintf(boolian, sizeof(boolian), "%d", !!exclude_replies);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!exclude_replies);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_user_entities(enum APIS api, char **uri, int include_user_entities) {
 	if (include_user_entities != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_user_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_user_entities);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!include_user_entities);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_my_retweet(enum APIS api, char **uri, int include_my_retweet) {
 	if (include_my_retweet != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_my_retweet=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_my_retweet);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!include_my_retweet);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -314,11 +314,11 @@ static char **add_place_id(enum APIS api, char **uri, tweet_id_t place_id) {
 
 static char **add_display_coordinates(enum APIS api, char **uri, int display_coordinates) {
 	if (display_coordinates != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "display_coordinates=");
-		snprintf(boolian, sizeof(boolian), "%d", !!display_coordinates);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!display_coordinates);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -347,33 +347,33 @@ static char **add_maxwidth(enum APIS api, char **uri, int maxwidth) {
 
 static char **add_hide_media(enum APIS api, char **uri, int hide_media) {
 	if (hide_media != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "hide_media=");
-		snprintf(boolian, sizeof(boolian), "%d", !!hide_media);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!hide_media);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_hide_thread(enum APIS api, char **uri, int hide_thread) {
 	if (hide_thread != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "hide_thread=");
-		snprintf(boolian, sizeof(boolian), "%d", !!hide_thread);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!hide_thread);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_omit_script(enum APIS api, char **uri, int omit_script) {
 	if (omit_script != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "omit_script=");
-		snprintf(boolian, sizeof(boolian), "%d", !!omit_script);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!omit_script);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -419,11 +419,11 @@ static char **add_cursor(enum APIS api, char **uri, int cursor) {
 
 static char **add_stringify_ids(enum APIS api, char **uri, int stringify_ids) {
 	if (stringify_ids != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "stringify_ids=");
-		snprintf(boolian, sizeof(boolian), "%d", !!stringify_ids);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!stringify_ids);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -509,11 +509,11 @@ static char **add_callback(enum APIS api, char **uri, char *callback) {
 
 static char **add_skip_status(enum APIS api, char **uri, int skip_status) {
 	if (skip_status != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "skip_status=");
-		snprintf(boolian, sizeof(boolian), "%d", !!skip_status);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!skip_status);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -562,33 +562,33 @@ static char **add_user_id_str(enum APIS api, char **uri, char *user_id) {
 
 static char **add_follow(enum APIS api, char **uri, int follow) {
 	if (follow != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "follow=");
-		snprintf(boolian, sizeof(boolian), "%d", !!follow);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!follow);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_device(enum APIS api, char **uri, int device) {
 	if (device != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "device=");
-		snprintf(boolian, sizeof(boolian), "%d", !!device);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!device);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_retweets(enum APIS api, char **uri, int retweets) {
 	if (retweets != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "retweets=");
-		snprintf(boolian, sizeof(boolian), "%d", !!retweets);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!retweets);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
