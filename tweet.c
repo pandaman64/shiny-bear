@@ -121,6 +121,9 @@ char const * api_uri[] = {
 [FS_SHOW] = "friendships/show.json",
 [FRIENDS_LIST] = "friends/list.json",
 [FOLLOWERS_LIST] = "followers/list.json",
+[ACCOUNT_SETTINGS] = "account/settings.json",
+[ACCOUNT_VERIFY_CREDEBTIALS] = "account/verify_credentials.json",
+[ACCOUNT_UPDATE_DELIVERY_DEVICE] = "account/update_delivery_device.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -640,6 +643,68 @@ static char **add_target_screen_name(enum APIS api, char **uri, char *target_scr
 	return uri;
 }
 
+static char **add_trend_location_woeid(enum APIS api, char **uri, int trend_location_woeid) {
+	if (trend_location_woeid) {
+		char woeid[12] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "trend_location_woeid=");
+		snprintf(woeid, sizeof(woeid), "%d", trend_location_woeid);
+		alloc_strcat(uri, woeid);
+	}
+	return uri;
+}
+
+static char **add_sleep_time_enabled(enum APIS api, char **uri, int sleep_time_enabled) {
+	if (sleep_time_enabled != -1) {
+		char boolean[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "sleep_time_enabled=");
+		snprintf(boolean, sizeof(boolean), "%d", !!sleep_time_enabled);
+		alloc_strcat(uri, boolean);
+	}
+	return uri;
+}
+
+static char **add_start_sleep_time(enum APIS api, char **uri, int start_sleep_time) {
+	if (start_sleep_time) {
+		char time[12] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "start_sleep_time=");
+		snprintf(time, sizeof(time), "%d", start_sleep_time);
+		alloc_strcat(uri, time);
+	}
+	return uri;
+}
+
+static char **add_end_sleep_time(enum APIS api, char **uri, int end_sleep_time) {
+	if (end_sleep_time) {
+		char time[12] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "end_sleep_time=");
+		snprintf(time, sizeof(time), "%d", end_sleep_time);
+		alloc_strcat(uri, time);
+	}
+	return uri;
+}
+
+static char **add_time_zone(enum APIS api, char **uri, char *time_zone) {
+	if (time_zone && *time_zone) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "time_zone=");
+		alloc_strcat(uri, time_zone);
+	}
+	return uri;
+}
+
+static char **add_device_str(enum APIS api, char **uri, char *device) {
+	if (device && *device) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "device=");
+		alloc_strcat(uri, device);
+	}
+	return uri;
+}
+
 int get_statuses_mentions_timeline (
 	char **res, //response
 	int count, //optional. if not 0, add it to argument.
@@ -695,7 +760,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -797,7 +862,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -891,7 +956,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -971,7 +1036,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1030,7 +1095,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1101,7 +1166,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1155,7 +1220,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1248,7 +1313,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1307,7 +1372,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1425,7 +1490,7 @@ Example Values: fr
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1495,7 +1560,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1615,7 +1680,7 @@ Example Values: processTweets
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1700,7 +1765,7 @@ When set to either true, t or 1 statuses will not be included in the returned us
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1770,7 +1835,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1812,7 +1877,7 @@ Example Values: 587424932
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1857,7 +1922,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1912,7 +1977,7 @@ Example Values: Meet me behind the cafeteria after school
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -1957,7 +2022,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2028,7 +2093,7 @@ Example Values: 2048
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2110,7 +2175,7 @@ Example Values: 2048
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2165,7 +2230,7 @@ Example Values: 783214,6253282
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2214,7 +2279,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2262,7 +2327,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2318,7 +2383,7 @@ Example Values: true
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2372,7 +2437,7 @@ Example Values: 12345
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2440,7 +2505,7 @@ Example Values: true, false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2510,7 +2575,7 @@ Example Values: noradio
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2597,7 +2662,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2685,7 +2750,7 @@ Example Values: false
 	#endif
 
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
 
@@ -2707,6 +2772,210 @@ Example Values: false
 	add_include_user_entities(api, &uri, include_user_entities);
 
 	int ret = http_request(uri, GET, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int get_account_settings (
+	char **res //response
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/account/settings.json
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_SETTINGS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	int ret = http_request(uri, GET, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int get_account_verify_credentials (
+	char **res, //response
+	int include_entities, //optional. if not -1, add it to argument.
+	int skip_status //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/account/verify_credentials.json
+Parameters
+
+include_entities optional
+
+The entities node will not be included when set to false.
+
+Example Values: false
+
+skip_status optional
+
+When set to either true, t or 1 statuses will not be included in the returned user objects.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_VERIFY_CREDEBTIALS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_include_entities(api, &uri, include_entities);
+	add_skip_status(api, &uri, skip_status);
+
+	int ret = http_request(uri, GET, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int post_account_settings (
+	char **res, //response
+	int trend_location_woeid, //optional. if not 0, add it to argument.
+	int sleep_time_enabled, //optional. if not -1, add it to argument.
+	int start_sleep_time, //optional. if not -1, add it to argument.
+	int end_sleep_time, //optional. if not -1, add it to argument.
+	char *time_zone, //optional. if it is valid, add it to argument.
+	char *lang //optional. if it is valid, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/account/settings.json
+Parameters
+
+While all parameters for this method are optional, at least one or more should be provided when executing this request.
+
+trend_location_woeid optional
+
+The Yahoo! Where On Earth ID to use as the user's default trend location. Global information is available by using 1 as the WOEID. The woeid must be one of the locations returned by GET trends/available.
+
+Example Values: 1
+
+sleep_time_enabled optional
+
+When set to true, t or 1, will enable sleep time for the user. Sleep time is the time when push or SMS notifications should not be sent to the user.
+
+Example Values: true
+
+start_sleep_time optional
+
+The hour that sleep time should begin if it is enabled. The value for this parameter should be provided in ISO8601 format (i.e. 00-23). The time is considered to be in the same timezone as the user's time_zone setting.
+
+Example Values: 13
+
+end_sleep_time optional
+
+The hour that sleep time should end if it is enabled. The value for this parameter should be provided in ISO8601 format (i.e. 00-23). The time is considered to be in the same timezone as the user's time_zone setting.
+
+Example Values: 13
+
+time_zone optional
+
+The timezone dates and times should be displayed in for the user. The timezone must be one of the Rails TimeZone names.
+
+Example Values: Europe/Copenhagen, Pacific/Tongatapu
+
+lang optional
+
+The language which Twitter should render in for this user. The language must be specified by the appropriate two letter ISO 639-1 representation. Currently supported languages are provided by GET help/languages.
+
+Example Values: it, en, es
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_SETTINGS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_trend_location_woeid(api, &uri, trend_location_woeid);
+	add_sleep_time_enabled(api, &uri, sleep_time_enabled);
+	add_start_sleep_time(api, &uri, start_sleep_time);
+	add_end_sleep_time(api, &uri, end_sleep_time);
+	add_time_zone(api, &uri, time_zone);
+	add_lang(api, &uri, lang);
+
+	int ret = http_request(uri, POST, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int post_account_update_delivery_device (
+	char *device, //required.
+	char **res, //response
+	int include_entities //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/account/update_delivery_device.json
+Parameters
+device required
+
+Must be one of: sms, none.
+
+Example Values: sms
+
+include_entities optional
+
+When set to either true, t or 1, each tweet will include a node called "entities,". This node offers a variety of metadata about the tweet in a discreet structure, including: user_mentions, urls, and hashtags. While entities are opt-in on timelines at present, they will be made a default component of output in the future. See Tweet Entities for more detail on entities.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_UPDATE_DELIVERY_DEVICE;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_device_str(api, &uri, device);
+	add_include_entities(api, &uri, include_entities);
+
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
 

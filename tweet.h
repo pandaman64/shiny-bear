@@ -38,6 +38,9 @@ enum APIS {
 	FS_SHOW,
 	FRIENDS_LIST,
 	FOLLOWERS_LIST,
+	ACCOUNT_SETTINGS,
+	ACCOUNT_VERIFY_CREDEBTIALS,
+	ACCOUNT_UPDATE_DELIVERY_DEVICE,
 	NUM_OF_APIS
 };
 
@@ -75,6 +78,9 @@ struct GEOCODE{
 #define MIXED 1
 #define RECENT 2
 #define POPULAR 4
+
+#define SMS "sms"
+#define NONE "none"
 
 int get_statuses_mentions_timeline (
 	char **res, //response
@@ -321,4 +327,31 @@ int get_followers_list (
 	int skip_status, //optional. if not -1, add it to argument.
 	int include_user_entities //optional. if not -1, add it to argument.
 	);
+
+int get_account_settings (
+	char **res //response
+	);
+
+int get_account_verify_credentials (
+	char **res, //response
+	int include_entities, //optional. if not -1, add it to argument.
+	int skip_status //optional. if not -1, add it to argument.
+	);
+
+int post_account_settings (
+	char **res, //response
+	int trend_location_woeid, //optional. if not 0, add it to argument.
+	int sleep_time_enabled, //optional. if not -1, add it to argument.
+	int start_sleep_time, //optional. if not -1, add it to argument.
+	int end_sleep_time, //optional. if not -1, add it to argument.
+	char *time_zone, //optional. if it is valid, add it to argument.
+	char *lang //optional. if it is valid, add it to argument.
+	);
+
+int post_account_update_delivery_device (
+	char *device, //required.
+	char **res, //response
+	int include_entities //optional. if not -1, add it to argument.
+	);
+
 #endif
