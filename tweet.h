@@ -3,6 +3,11 @@
 
 typedef unsigned long long int tweet_id_t;
 
+enum {
+	GET,
+	POST,
+};
+
 enum APIS {
 	STATUSES_MENTIONS_TIMELINE,
 	STATUSES_USER_TIMELINE,
@@ -36,13 +41,6 @@ enum APIS {
 	NUM_OF_APIS
 };
 
-enum ALIGN {
-	NONE,
-	LEFT,
-	RIGHT,
-	CENTER,
-};
-
 union KEYS {
 	struct {
 		char const *c_key;
@@ -55,6 +53,13 @@ union KEYS {
 
 union KEYS *register_keys (union KEYS *k);
 int check_keys(void);
+
+enum ALIGN {
+	NONE,
+	LEFT,
+	RIGHT,
+	CENTER,
+};
 
 struct GEOCODE{
 		double latitude;
