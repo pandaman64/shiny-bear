@@ -26,7 +26,7 @@ void main()
 	key.c_sec = c_sec;
 	key.t_key = t_key;
 	key.t_sec = t_sec;
-	init_keys(key);
+	register_keys(key);
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	char[] unit = "\0".dup; 
 	GEOCODE code = {0,0,0,unit.ptr};
