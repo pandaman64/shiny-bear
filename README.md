@@ -71,3 +71,9 @@ Currently this library has wrappers for following twitter REST APIs:
 - [friends/list](https://dev.twitter.com/docs/api/1.1/get/friends/list)
 - [followers/list](https://dev.twitter.com/docs/api/1.1/get/followers/list)
 - [friendships/lookup](https://dev.twitter.com/docs/api/1.1/get/friendships/lookup)
+
+**Users**
+- [account/settings](https://dev.twitter.com/docs/api/1.1/get/account/settings)
+- [account/verify_credentials](https://dev.twitter.com/docs/api/1.1/get/account/verify_credentials)
+- [account/settings](https://dev.twitter.com/docs/api/1.1/post/account/settings)
+- [account/update_delivery_device](https://dev.twitter.com/docs/api/1.1/post/account/update_delivery_device)

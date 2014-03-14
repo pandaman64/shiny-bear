@@ -32,6 +32,16 @@ static char **alloc_strcat(char **dest, char const *src) {
 	return dest;
 }
 
+static union KEYS *keys = NULL;
+
+union KEYS *register_keys(union KEYS *k) {
+	return keys = k;
+}
+
+int check_keys(void) {
+	return keys->keys_array[0]&&keys->keys_array[1]&&keys->keys_array[2]&&keys->keys_array[3];
+}
+
 static size_t write_data(char *buffer, size_t size, size_t nmemb, void *rep) {
 	*(buffer + size * nmemb) = '\0';
 	alloc_strcat((char**)rep, buffer);
@@ -39,7 +49,7 @@ static size_t write_data(char *buffer, size_t size, size_t nmemb, void *rep) {
 	return size * nmemb;
 }
 
-static int http_request(char const *u, char const *p, char **rep) {
+static int http_request(char const *u, int p, char **rep) {
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
@@ -53,10 +63,16 @@ static int http_request(char const *u, char const *p, char **rep) {
 	if (!curl) {
 		fprintf(stderr, "failed to initialize curl\n");
 	}
-	curl_easy_setopt (curl, CURLOPT_URL, u);
-	if (p && *p) {
-		curl_easy_setopt (curl, CURLOPT_POSTFIELDS, (void *) p);
+	char *request = NULL;
+	char *post = NULL;
+	if (p) {
+		request = oauth_sign_url2(u, &post, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
+		curl_easy_setopt (curl, CURLOPT_POSTFIELDS, (void *) post);
 	}
+	else {
+		request = oauth_sign_url2(u, NULL, OA_HMAC, NULL, keys->keys_struct.c_key, keys->keys_struct.c_sec, keys->keys_struct.t_key, keys->keys_struct.t_sec);
+	}
+	curl_easy_setopt (curl, CURLOPT_URL, request);
 	//is it good? i dont know.
 	curl_easy_setopt (curl, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt (curl, CURLOPT_WRITEDATA, (void *) rep);
@@ -66,20 +82,11 @@ static int http_request(char const *u, char const *p, char **rep) {
 	if (ret != CURLE_OK) {
 		fprintf (stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror (ret));
 	}
-
+	free(request);request = NULL;
+	free(post);post = NULL;
 	curl_easy_cleanup(curl);
-	
+
 	return ret;
-}
-
-static union KEYS keys = {.keys_array = {NULL,NULL,NULL,NULL}}; 
-
-union KEYS init_keys(union KEYS k) {
-	return keys = k;
-}
-
-int check_keys(void) {
-	return keys.keys_array[0]&&keys.keys_array[1]&&keys.keys_array[2]&&keys.keys_array[3];
 }
 
 char const *api_uri_1_1 = "https://api.twitter.com/1.1/";
@@ -114,6 +121,9 @@ char const * api_uri[] = {
 [FS_SHOW] = "friendships/show.json",
 [FRIENDS_LIST] = "friends/list.json",
 [FOLLOWERS_LIST] = "followers/list.json",
+[ACCOUNT_SETTINGS] = "account/settings.json",
+[ACCOUNT_VERIFY_CREDEBTIALS] = "account/verify_credentials.json",
+[ACCOUNT_UPDATE_DELIVERY_DEVICE] = "account/update_delivery_device.json",
 };
 
 inline static char **add_que_or_amp(enum APIS api, char **uri) {
@@ -167,45 +177,45 @@ static char **add_max_id(enum APIS api, char **uri, tweet_id_t max_id) {
 
 static char **add_trim_user(enum APIS api, char **uri, int trim_user) {
 	if (trim_user != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "trim_user=");
-		snprintf(boolian, sizeof(boolian), "%d", !!trim_user);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!trim_user);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_contributor_details(enum APIS api, char **uri, int contributor_details) {
 	if (contributor_details != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "contributor_details=");
-		snprintf(boolian, sizeof(boolian), "%d", !!contributor_details);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!contributor_details);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_entities(enum APIS api, char **uri, int include_entities) {
 	if (include_entities != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_entities);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!include_entities);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_rts(enum APIS api, char **uri, int include_rts, int count) {
 	if (count || (include_rts != -1)) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_rts=");
 
-		snprintf(boolian, sizeof(boolian), "%d", count || (include_rts != -1));
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", count || (include_rts != -1));
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -232,33 +242,33 @@ static char **add_screen_name(enum APIS api, char **uri, char *screen_name) {
 
 static char **add_exclude_replies(enum APIS api, char **uri, int exclude_replies) {
 	if (exclude_replies != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "exclude_replies=");
-		snprintf(boolian, sizeof(boolian), "%d", !!exclude_replies);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!exclude_replies);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_user_entities(enum APIS api, char **uri, int include_user_entities) {
 	if (include_user_entities != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_user_entities=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_user_entities);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!include_user_entities);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_include_my_retweet(enum APIS api, char **uri, int include_my_retweet) {
 	if (include_my_retweet != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "include_my_retweet=");
-		snprintf(boolian, sizeof(boolian), "%d", !!include_my_retweet);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!include_my_retweet);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -314,11 +324,11 @@ static char **add_place_id(enum APIS api, char **uri, tweet_id_t place_id) {
 
 static char **add_display_coordinates(enum APIS api, char **uri, int display_coordinates) {
 	if (display_coordinates != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "display_coordinates=");
-		snprintf(boolian, sizeof(boolian), "%d", !!display_coordinates);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!display_coordinates);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -347,33 +357,33 @@ static char **add_maxwidth(enum APIS api, char **uri, int maxwidth) {
 
 static char **add_hide_media(enum APIS api, char **uri, int hide_media) {
 	if (hide_media != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "hide_media=");
-		snprintf(boolian, sizeof(boolian), "%d", !!hide_media);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!hide_media);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_hide_thread(enum APIS api, char **uri, int hide_thread) {
 	if (hide_thread != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "hide_thread=");
-		snprintf(boolian, sizeof(boolian), "%d", !!hide_thread);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!hide_thread);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_omit_script(enum APIS api, char **uri, int omit_script) {
 	if (omit_script != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "omit_script=");
-		snprintf(boolian, sizeof(boolian), "%d", !!omit_script);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!omit_script);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -419,11 +429,11 @@ static char **add_cursor(enum APIS api, char **uri, int cursor) {
 
 static char **add_stringify_ids(enum APIS api, char **uri, int stringify_ids) {
 	if (stringify_ids != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "stringify_ids=");
-		snprintf(boolian, sizeof(boolian), "%d", !!stringify_ids);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!stringify_ids);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -509,11 +519,11 @@ static char **add_callback(enum APIS api, char **uri, char *callback) {
 
 static char **add_skip_status(enum APIS api, char **uri, int skip_status) {
 	if (skip_status != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "skip_status=");
-		snprintf(boolian, sizeof(boolian), "%d", !!skip_status);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!skip_status);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -562,33 +572,33 @@ static char **add_user_id_str(enum APIS api, char **uri, char *user_id) {
 
 static char **add_follow(enum APIS api, char **uri, int follow) {
 	if (follow != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "follow=");
-		snprintf(boolian, sizeof(boolian), "%d", !!follow);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!follow);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_device(enum APIS api, char **uri, int device) {
 	if (device != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "device=");
-		snprintf(boolian, sizeof(boolian), "%d", !!device);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!device);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
 
 static char **add_retweets(enum APIS api, char **uri, int retweets) {
 	if (retweets != -1) {
-		char boolian[2];
+		char boolean[2];
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "retweets=");
-		snprintf(boolian, sizeof(boolian), "%d", !!retweets);
-		alloc_strcat(uri, boolian);
+		snprintf(boolean, sizeof(boolean), "%d", !!retweets);
+		alloc_strcat(uri, boolean);
 	}
 	return uri;
 }
@@ -629,6 +639,68 @@ static char **add_target_screen_name(enum APIS api, char **uri, char *target_scr
 		add_que_or_amp(api, uri);
 		alloc_strcat(uri, "target_screen_name=");
 		alloc_strcat(uri, target_screen_name);
+	}
+	return uri;
+}
+
+static char **add_trend_location_woeid(enum APIS api, char **uri, int trend_location_woeid) {
+	if (trend_location_woeid) {
+		char woeid[12] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "trend_location_woeid=");
+		snprintf(woeid, sizeof(woeid), "%d", trend_location_woeid);
+		alloc_strcat(uri, woeid);
+	}
+	return uri;
+}
+
+static char **add_sleep_time_enabled(enum APIS api, char **uri, int sleep_time_enabled) {
+	if (sleep_time_enabled != -1) {
+		char boolean[2];
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "sleep_time_enabled=");
+		snprintf(boolean, sizeof(boolean), "%d", !!sleep_time_enabled);
+		alloc_strcat(uri, boolean);
+	}
+	return uri;
+}
+
+static char **add_start_sleep_time(enum APIS api, char **uri, int start_sleep_time) {
+	if (start_sleep_time) {
+		char time[12] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "start_sleep_time=");
+		snprintf(time, sizeof(time), "%d", start_sleep_time);
+		alloc_strcat(uri, time);
+	}
+	return uri;
+}
+
+static char **add_end_sleep_time(enum APIS api, char **uri, int end_sleep_time) {
+	if (end_sleep_time) {
+		char time[12] = {0};
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "end_sleep_time=");
+		snprintf(time, sizeof(time), "%d", end_sleep_time);
+		alloc_strcat(uri, time);
+	}
+	return uri;
+}
+
+static char **add_time_zone(enum APIS api, char **uri, char *time_zone) {
+	if (time_zone && *time_zone) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "time_zone=");
+		alloc_strcat(uri, time_zone);
+	}
+	return uri;
+}
+
+static char **add_device_str(enum APIS api, char **uri, char *device) {
+	if (device && *device) {
+		add_que_or_amp(api, uri);
+		alloc_strcat(uri, "device=");
+		alloc_strcat(uri, device);
 	}
 	return uri;
 }
@@ -686,17 +758,17 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_MENTIONS_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_count(api, &uri, count);
 	add_since_id(api, &uri, since_id);
 	add_max_id(api, &uri, max_id);
@@ -704,16 +776,10 @@ Example Values: false
 	add_contributor_details(api, &uri, contributor_details);
 	add_include_entities(api, &uri, include_entities);
 	add_include_rts(api, &uri, include_rts, count);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -731,7 +797,6 @@ int get_statuses_user_timeline (
 	int include_rts //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	) {
 /*
-
 
 Resource URL
 https://api.twitter.com/1.1/statuses/user_timeline.json
@@ -791,27 +856,26 @@ When set to false, the timeline will strip any native retweets (though they will
 
 Example Values: false
 
-
 */
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_USER_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_count(api, &uri, count);
@@ -821,16 +885,10 @@ Example Values: false
 	add_exclude_replies(api, &uri, exclude_replies);
 	add_contributor_details(api, &uri, contributor_details);
 	add_include_rts(api, &uri, include_rts, count);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -896,17 +954,17 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_HOME_TIMELINE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_count(api, &uri, count);
 	add_since_id(api, &uri, since_id);
 	add_max_id(api, &uri, max_id);
@@ -914,16 +972,10 @@ Example Values: false
 	add_exclude_replies(api, &uri, exclude_replies);
 	add_contributor_details(api, &uri, contributor_details);
 	add_include_entities(api, &uri, include_entities);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -938,7 +990,6 @@ int get_statuses_retweets_of_me (
 	int include_user_entities //optional. if not -1, add it to argument,however, 1 is recommended.see below.
 	) {
 /*
-
 
 Resource URL
 https://api.twitter.com/1.1/statuses/retweets_of_me.json
@@ -979,22 +1030,21 @@ The user entities node will be disincluded when set to false.
 
 Example Values: false
 
-
 */
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_RETWEETS_OF_ME;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_count(api, &uri, count);
 	add_since_id(api, &uri, since_id);
 	add_max_id(api, &uri, max_id);
@@ -1002,16 +1052,10 @@ Example Values: false
 	add_include_entities(api, &uri, include_entities);
 	add_include_user_entities(api, &uri, include_user_entities);
 
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1049,17 +1093,17 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!id) {
 		fprintf(stderr, "need id number\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_RETWEETS_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
@@ -1067,21 +1111,15 @@ Example Values: true
 	char i[32] = {0};
 	snprintf(i, sizeof(i), "%lld.json", id);
 	alloc_strcat(&uri, i);
-	
+
 	count%=101;
 	add_count(api, &uri, count);
 	add_trim_user(api, &uri, trim_user);
 
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1126,17 +1164,17 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!id) {
 		fprintf(stderr, "need id number\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_SHOW_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
@@ -1146,16 +1184,10 @@ Example Values: false
 	add_trim_user(api, &uri, trim_user);
 	add_include_my_retweet(api, &uri, include_my_retweet);
 	add_include_entities(api, &uri, include_entities);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1186,17 +1218,17 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!id) {
 		fprintf(stderr, "need id number\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_DESTROY_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
@@ -1204,23 +1236,16 @@ Example Values: true
 	char i[32] = {0};
 	snprintf(i, sizeof(i), "%lld.json", id);
 	alloc_strcat(&uri, i);
-	
+
 	add_trim_user(api, &uri, trim_user);
 
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
-
 
 int post_statuses_update(
 	char *status, //required
@@ -1241,82 +1266,67 @@ https://api.twitter.com/1.1/statuses/update.json
 Parameters
 status required
 
-
 The text of your status update, typically up to 140 characters. URL encode as necessary. t.co link wrapping may effect character counts.
-
 
 There are some special commands in this field to be aware of. For instance, preceding a message with "D " or "M " and following it with a screen name can create a direct message to that user if the relationship allows for it.
 
 in_reply_to_status_id optional
 
-
 The ID of an existing status that the update is in reply to.
 
-
 Note:: This parameter will be ignored unless the author of the tweet this parameter references is mentioned within the status text. Therefore, you must include @username, where username is the author of the referenced tweet, within the update.
-
 
 lat optional
 
 The latitude of the location this tweet refers to. This parameter will be ignored unless it is inside the range -90.0 to +90.0 (North is positive) inclusive. It will also be ignored if there isn't a corresponding long parameter.
 
-
 Example Values: 37.7821120598956
-
 
 long optional
 
 The longitude of the location this tweet refers to. The valid ranges for longitude is -180.0 to +180.0 (East is positive) inclusive. This parameter will be ignored if outside that range, if it is not a number, if geo_enabled is disabled, or if there not a corresponding lat parameter.
 
-
 Example Values: -122.400612831116
-
 
 place_id optional
 
 A place in the world. These IDs can be retrieved from GET geo/reverse_geocode.
 
-
 Example Values: df51dec6f4ee2b2c
-
 
 display_coordinates optional
 
 Whether or not to put a pin on the exact coordinates a tweet has been sent from.
 
-
 Example Values: true
 
-
 trim_user optional
-
 
 When set to either true, t or 1, each tweet returned in a timeline will include a user object including only the status authors numerical ID. Omit this parameter to receive the complete user object.
 
 Example Values: true
-
 
 */
 
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!status[0]) {
 		fprintf(stderr, "need status text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_UPDATE;
 	alloc_strcat(&uri, api_uri_1_1);
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_status(api, &uri, status);
 	add_in_reply_to_status_id(api, &uri, in_reply_to_status_id);
 	if (do_add_l_l) {
@@ -1327,13 +1337,9 @@ Example Values: true
 	add_trim_user(api, &uri, trim_user);
 
 
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
-	
+	int ret = http_request(uri, POST, res);
+
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
 
 	return ret;
 }
@@ -1364,17 +1370,17 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!id) {
 		fprintf(stderr, "need id number\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_RETWEET_BY_ID;
 	alloc_strcat(&uri, api_uri_1_1); 
@@ -1382,19 +1388,13 @@ Example Values: true
 	char i[32] = {0};
 	snprintf(i, sizeof(i), "%lld.json", id);
 	alloc_strcat(&uri, i);
-	
+
 	add_trim_user(api, &uri, trim_user);
 
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1488,18 +1488,17 @@ Example Values: fr
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!id || !url || !(*url)) {
 		fprintf(stderr, "need id number or url text.\n");
 		return 0;
 	}
-	
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_OEMBED;
 	alloc_strcat(&uri, api_uri_1_1); 
@@ -1515,15 +1514,9 @@ Example Values: fr
 	add_related(api, &uri, related);
 	add_lang(api, &uri, lang);
 
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
-
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1565,36 +1558,30 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!id) {
 		fprintf(stderr, "need id number\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = STATUSES_RETWEETERS_IDS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_id(api, &uri, id);
 	add_cursor(api, &uri, cursor);
 	add_stringify_ids(api, &uri, stringify_ids);
 
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1691,17 +1678,17 @@ Example Values: processTweets
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!q || !(*q)) {
 		fprintf(stderr, "need q text\n");
 		return 0;
 	}
-	
+
 	if (strlen(q) > 1000) {
 		fprintf(stderr, "too long q text\n");
 		return 0;
@@ -1724,16 +1711,9 @@ Example Values: processTweets
 	add_callback(api, &uri, callback);
 
 
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
-
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1783,32 +1763,26 @@ When set to either true, t or 1 statuses will not be included in the returned us
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = DIRECT_MESSAGES;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_count(api, &uri, count);
 	add_since_id(api, &uri, since_id);
 	add_max_id(api, &uri, max_id);
 	add_include_entities(api, &uri, include_entities);
 	add_skip_status(api, &uri, skip_status);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1859,32 +1833,26 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = DM_SENT;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_count(api, &uri, count);
 	add_since_id(api, &uri, since_id);
 	add_max_id(api, &uri, max_id);
 	add_pages(api, &uri,pages);
 	add_include_entities(api, &uri, include_entities);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1907,28 +1875,22 @@ Example Values: 587424932
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = DM_SHOW;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
-	add_id(api, &uri, id);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	add_id(api, &uri, id);
+
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -1958,29 +1920,23 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = DM_DESTROY;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_id(api, &uri, id);
 	add_include_entities(api, &uri, include_entities);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2019,35 +1975,29 @@ Example Values: Meet me behind the cafeteria after school
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = DM_NEW;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_text(api, &uri, text);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2070,28 +2020,22 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_NO_RETWEETS_IDS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
-	add_stringify_ids(api, &uri, stringify_ids);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	add_stringify_ids(api, &uri, stringify_ids);
+
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2147,37 +2091,31 @@ Example Values: 2048
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FRIENDS_IDS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_cursor(api, &uri, cursor);
 	add_stringify_ids(api, &uri, stringify_ids);
 	add_count_upto_5000(api, &uri, count);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2235,37 +2173,31 @@ Example Values: 2048
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FOLLOWERS_IDS;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_cursor(api, &uri, cursor);
 	add_stringify_ids(api, &uri, stringify_ids);
 	add_count_upto_5000(api, &uri, count);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2296,29 +2228,23 @@ Example Values: 783214,6253282
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_LOOKUP;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_screen_name(api, &uri, screen_name);
 	add_user_id_str(api, &uri, user_id);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2351,29 +2277,23 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_INCOMING;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_cursor(api, &uri, cursor);
 	add_stringify_ids(api, &uri, stringify_ids);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2405,29 +2325,23 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_OUTGOING;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_cursor(api, &uri, cursor);
 	add_stringify_ids(api, &uri, stringify_ids);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2467,35 +2381,29 @@ Example Values: true
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_CREATE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_follow(api, &uri, follow);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2527,34 +2435,28 @@ Example Values: 12345
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_DESTROY;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2601,36 +2503,30 @@ Example Values: true, false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_UPDATE;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_device(api, &uri, device);
 	add_retweets(api, &uri, retweets);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, &post, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, post, res);
 
+	int ret = http_request(uri, POST, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2677,36 +2573,30 @@ Example Values: noradio
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(source_id || (source_screen_name && source_screen_name[0])) && !(target_id || (target_screen_name && target_screen_name[0]))) {
 		fprintf(stderr, "At least one source and one target, whether specified by IDs or screen_names");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FS_SHOW;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_source_id(api, &uri, source_id);
 	add_source_screen_name(api, &uri, source_screen_name);
 	add_target_id(api, &uri, target_id);
 	add_target_screen_name(api, &uri, target_screen_name);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2770,38 +2660,32 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FRIENDS_LIST;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_cursor(api, &uri, cursor);
 	add_count(api, &uri, count);
 	add_skip_status(api, &uri, skip_status);
 	add_include_user_entities(api, &uri, include_user_entities);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
-
 
 	return ret;
 }
@@ -2864,38 +2748,236 @@ Example Values: false
 	#ifdef DEBUG
 	puts(__func__);
 	#endif
-	
+
 	if (!check_keys()) {
-		fprintf(stderr, "need init_keys()\n");
+		fprintf(stderr, "need register_keys\n");
 		return 0;
 	}
-	
+
 	if (!(user_id || (screen_name && screen_name[0]))) {
 		fprintf(stderr, "need user_id number or screen_name text\n");
 		return 0;
 	}
-	
+
 	char *uri = NULL;
 	enum APIS api = FOLLOWERS_LIST;
 	alloc_strcat(&uri, api_uri_1_1); 
 	alloc_strcat(&uri, api_uri[api]);
-	
+
 	add_user_id(api, &uri, user_id);
 	add_screen_name(api, &uri, screen_name);
 	add_cursor(api, &uri, cursor);
 	add_count(api, &uri, count);
 	add_skip_status(api, &uri, skip_status);
 	add_include_user_entities(api, &uri, include_user_entities);
-	
-	char *post = NULL;
-	char *request = oauth_sign_url2(uri, NULL, OA_HMAC, NULL, keys.keys_struct.c_key, keys.keys_struct.c_sec, keys.keys_struct.t_key, keys.keys_struct.t_sec);
-	int ret = http_request(request, NULL, res);
 
+	int ret = http_request(uri, GET, res);
 
 	free(uri);uri = NULL;
-	free(request);request = NULL;
-	free(post);post = NULL;
 
+	return ret;
+}
+
+int get_account_settings (
+	char **res //response
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/account/settings.json
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_SETTINGS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	int ret = http_request(uri, GET, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int get_account_verify_credentials (
+	char **res, //response
+	int include_entities, //optional. if not -1, add it to argument.
+	int skip_status //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/account/verify_credentials.json
+Parameters
+
+include_entities optional
+
+The entities node will not be included when set to false.
+
+Example Values: false
+
+skip_status optional
+
+When set to either true, t or 1 statuses will not be included in the returned user objects.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_VERIFY_CREDEBTIALS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_include_entities(api, &uri, include_entities);
+	add_skip_status(api, &uri, skip_status);
+
+	int ret = http_request(uri, GET, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int post_account_settings (
+	char **res, //response
+	int trend_location_woeid, //optional. if not 0, add it to argument.
+	int sleep_time_enabled, //optional. if not -1, add it to argument.
+	int start_sleep_time, //optional. if not -1, add it to argument.
+	int end_sleep_time, //optional. if not -1, add it to argument.
+	char *time_zone, //optional. if it is valid, add it to argument.
+	char *lang //optional. if it is valid, add it to argument.
+	) {
+/*
+
+Resource URL
+https://api.twitter.com/1.1/account/settings.json
+Parameters
+
+While all parameters for this method are optional, at least one or more should be provided when executing this request.
+
+trend_location_woeid optional
+
+The Yahoo! Where On Earth ID to use as the user's default trend location. Global information is available by using 1 as the WOEID. The woeid must be one of the locations returned by GET trends/available.
+
+Example Values: 1
+
+sleep_time_enabled optional
+
+When set to true, t or 1, will enable sleep time for the user. Sleep time is the time when push or SMS notifications should not be sent to the user.
+
+Example Values: true
+
+start_sleep_time optional
+
+The hour that sleep time should begin if it is enabled. The value for this parameter should be provided in ISO8601 format (i.e. 00-23). The time is considered to be in the same timezone as the user's time_zone setting.
+
+Example Values: 13
+
+end_sleep_time optional
+
+The hour that sleep time should end if it is enabled. The value for this parameter should be provided in ISO8601 format (i.e. 00-23). The time is considered to be in the same timezone as the user's time_zone setting.
+
+Example Values: 13
+
+time_zone optional
+
+The timezone dates and times should be displayed in for the user. The timezone must be one of the Rails TimeZone names.
+
+Example Values: Europe/Copenhagen, Pacific/Tongatapu
+
+lang optional
+
+The language which Twitter should render in for this user. The language must be specified by the appropriate two letter ISO 639-1 representation. Currently supported languages are provided by GET help/languages.
+
+Example Values: it, en, es
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_SETTINGS;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_trend_location_woeid(api, &uri, trend_location_woeid);
+	add_sleep_time_enabled(api, &uri, sleep_time_enabled);
+	add_start_sleep_time(api, &uri, start_sleep_time);
+	add_end_sleep_time(api, &uri, end_sleep_time);
+	add_time_zone(api, &uri, time_zone);
+	add_lang(api, &uri, lang);
+
+	int ret = http_request(uri, POST, res);
+
+	free(uri);uri = NULL;
+
+	return ret;
+}
+
+int post_account_update_delivery_device (
+	char *device, //required.
+	char **res, //response
+	int include_entities //optional. if not -1, add it to argument.
+	) {
+/*
+Resource URL
+https://api.twitter.com/1.1/account/update_delivery_device.json
+Parameters
+device required
+
+Must be one of: sms, none.
+
+Example Values: sms
+
+include_entities optional
+
+When set to either true, t or 1, each tweet will include a node called "entities,". This node offers a variety of metadata about the tweet in a discreet structure, including: user_mentions, urls, and hashtags. While entities are opt-in on timelines at present, they will be made a default component of output in the future. See Tweet Entities for more detail on entities.
+
+Example Values: true
+
+*/
+	#ifdef DEBUG
+	puts(__func__);
+	#endif
+
+	if (!check_keys()) {
+		fprintf(stderr, "need register_keys\n");
+		return 0;
+	}
+
+	char *uri = NULL;
+	enum APIS api = ACCOUNT_UPDATE_DELIVERY_DEVICE;
+	alloc_strcat(&uri, api_uri_1_1); 
+	alloc_strcat(&uri, api_uri[api]);
+
+	add_device_str(api, &uri, device);
+	add_include_entities(api, &uri, include_entities);
+
+	int ret = http_request(uri, POST, res);
+
+	free(uri);uri = NULL;
 
 	return ret;
 }
