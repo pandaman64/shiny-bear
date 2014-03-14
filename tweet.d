@@ -53,7 +53,7 @@ union KEYS {
 	const(char)* keys_array[4];
 }
 
-KEYS init_keys (KEYS k);
+KEYS* register_keys (KEYS *k);
 int check_keys();
 
 struct GEOCODE{
