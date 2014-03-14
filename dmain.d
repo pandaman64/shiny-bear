@@ -14,8 +14,8 @@ char[] ctod(const char* str){
 //curl functions
 //I think they should be moved and hidden in the library like bear_init()/bear_cleanup()
 //return type CURLcode is enum, so actually it is int
-int curl_global_init(int);
-void curl_global_cleanup();
+extern(C) int curl_global_init(int);
+extern(C) void curl_global_cleanup();
 enum CURL_GLOBAL_DEFAULT = (1<<0) | (1<<1);
 
 void main()
@@ -26,7 +26,7 @@ void main()
 	key.c_sec = c_sec;
 	key.t_key = t_key;
 	key.t_sec = t_sec;
-	register_keys(key);
+	register_keys(&key);
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	char[] unit = "\0".dup; 
 	GEOCODE code = {0,0,0,unit.ptr};
