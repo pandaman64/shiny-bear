@@ -4,18 +4,18 @@ CC=gcc
 CFLAGS= -ansi -std=c99 -c -W -Wall -Werror
 LDFLAGS= -lcurl -loauth -lcrypto
 OBJS = \
-	tweet.o \
 	main.o
-
+LIBS = tweet.a
 
 all: $(TARGET)
 
-lib: $(OBJS)
-	cp tweet.o tweet.a
+lib: $(LIBS)
 
-$(TARGET): $(OBJS)
-	$(CC) -o $(TARGET) $(OBJS) $(LDFLAGS)
+$(TARGET): $(OBJS) $(LIBS)
+	$(CC) -o $(TARGET) $(OBJS) $(LIBS) $(LDFLAGS)
 
+.o.a:
+	ar rv $*.a $<
 
 .c.o :
 	gcc $(CFLAGS) -O2 $<
