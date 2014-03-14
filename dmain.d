@@ -30,7 +30,8 @@ void main()
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	char[] unit = "\0".dup; 
 	GEOCODE code = {0,0,0,unit.ptr};
-	char[] status_text = "status text\0".dup; 
+	"Tweet.".writeln;
+	char[] status_text = (stdin.readln ~ "\0").dup;
 	auto status = post_statuses_update(status_text.ptr, &rep, 0, 0, code, 0, -1, -1);
 	if(rep) {rep.ctod.writeln;}
 	free(rep);
