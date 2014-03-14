@@ -2,9 +2,9 @@
 TARGET=tweet
 CC=gcc
 CFLAGS= -ansi -std=c99 -c -W -Wall -Werror
-LDFLAGS= -lcurl -loauth -lcrypto
+LDFLAGS= -lcurl -loauth -lcrypto -lphobos2 -lpthread
 OBJS = \
-	main.o
+	dmain.o
 LIBS = tweet.a
 
 all: $(TARGET)
@@ -14,12 +14,17 @@ lib: $(LIBS)
 $(TARGET): $(OBJS) $(LIBS)
 	$(CC) -o $(TARGET) $(OBJS) $(LIBS) $(LDFLAGS)
 
+.SUFFIXES: .d
+
 .o.a:
 	ar rv $*.a $<
 
 .c.o :
 	gcc $(CFLAGS) -O2 $<
 
+.d.o:
+	dmd -c $<
+	
 clean:
 	-rm $(TARGET)
 	-rm *.o
