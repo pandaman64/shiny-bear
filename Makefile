@@ -2,6 +2,7 @@
 TARGET=tweet
 CC=gcc
 CFLAGS= -ansi -std=c99 -c -W -Wall -Werror
+DCFLAGS=-g
 LDFLAGS= -lcurl -loauth -lcrypto -lphobos2 -lpthread
 OBJS = \
 	dmain.o
@@ -23,7 +24,7 @@ $(TARGET): $(OBJS) $(LIBS)
 	gcc $(CFLAGS) -O2 $<
 
 .d.o:
-	dmd -c $<
+	dmd $(DCFLAGS) -c $<
 	
 clean:
 	-rm $(TARGET)
