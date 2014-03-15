@@ -6,6 +6,7 @@ import std.conv;
 import std.string;
 import std.c.string;
 import std.c.stdlib;
+import std.json;
 
 char[] ctod(const char* str){
 	return str[0..strlen(str)].dup;
@@ -32,11 +33,13 @@ void main()
 	GEOCODE code = {0,0,0,unit.ptr};
 	"Tweet.".writeln;
 	char[] status_text = (stdin.readln ~ "\0").dup;
-	auto text = ~ x"E3 81 82 E3 81 84 E3 81 86 E3 81 88 E3 81 8A 0A" ~ '\0';
-	auto status = post_statuses_update(text.dup.ptr, &rep, 0, 0, code, 0, -1, -1);
-	if(rep) {rep.ctod.writeln;}
+	//auto text = x"E3 81 82 E3 81 84 E3 81 86 E3 81 88 E3 81 8A 0A" ~ '\0';
+	auto status = post_statuses_update(status_text.ptr, &rep, 0, 0, code, 0, -1, -1);
+	//if(rep) {rep.ctod.writeln;}
 	auto timeline = get_statuses_home_timeline(&rep, 5, 0, 0, -1, -1, -1, -1);
-	if (rep){rep.ctod.writeln;}
+	//if (rep){rep.ctod.writeln;}
+	auto json = parseJSON(rep.ctod);
+	json.writeln;
 	free(rep);
 	rep = null;
 	curl_global_cleanup();
