@@ -39,7 +39,18 @@ void main()
 	auto timeline = get_statuses_home_timeline(&rep, 5, 0, 0, -1, -1, -1, -1);
 	//if (rep){rep.ctod.writeln;}
 	auto json = parseJSON(rep.ctod);
-	json.writeln;
+	foreach(uint index,ref value;json){
+		foreach(string key,ref v;value){
+			switch(key){
+				case "screen_name":
+				case "text":
+					v.writeln;
+					break;
+
+				default:
+			}
+		}
+	}
 	free(rep);
 	rep = null;
 	curl_global_cleanup();
