@@ -20,7 +20,7 @@ enum CURL_GLOBAL_DEFAULT = (1<<0) | (1<<1);
 
 void main()
 {
-	char *rep;
+	char *rep = null;
 	KEYS key;
 	key.c_key = c_key;
 	key.c_sec = c_sec;
@@ -34,10 +34,10 @@ void main()
 	char[] status_text = (stdin.readln ~ "\0").dup;
 	auto status = post_statuses_update(status_text.ptr, &rep, 0, 0, code, 0, -1, -1);
 	if(rep) {rep.ctod.writeln;}
-	free(rep);
 	auto timeline = get_statuses_home_timeline(&rep, 5, 0, 0, -1, -1, -1, -1);
 	if (rep){rep.ctod.writeln;}
 	free(rep);
+	rep = null;
 	curl_global_cleanup();
 }
 
